@@ -7,8 +7,7 @@ class TransportWebsocket implements Transport {
 
   Completer _supportedCompleter;
 
-  String _host;
-  int _port;
+  String _url;
   var _settings;
 
   Future get supported {
@@ -54,30 +53,15 @@ class TransportWebsocket implements Transport {
   Stream<Event>        get onError    => _socket.onError;
   Stream<CloseEvent>   get onClose    => _socket.onClose;
 
-  TransportWebsocket() {
-  }
-
-  TransportWebsocket initialize(String host, [int port = 80, settings]) {
-    this._host = host;
-    this._port = port;
-    this._settings = settings;
-
-    return this;
+  TransportWebsocket(String this._url, [this._settings]) {
   }
 
   void connect() {
-    if (_host == null) {
+    if (_url == null) {
       throw new FormatException('Host has not been initialized');
     }
 
-    String protocol = 'ws';
-    String host = _host.replaceAll(new RegExp(r'/+$'), '');
-    String port = (_port == null) ? '' : ':$_port';
-    String path = 'ws';
-
-    String url = '$protocol://$host$port/$path';
-
-    _socket = new WebSocket(url, _settings);
+    _socket = new WebSocket(_url, _settings);
   }
 
   void disconnect([int code, String reason]) {
@@ -85,6 +69,10 @@ class TransportWebsocket implements Transport {
   }
 
   void send(data) {
+    /*
+      testovaci transport:
+      DI poslem server (kam posielam data)
+     */
     _socket.send(data);
   }
 }

@@ -10,9 +10,9 @@ void main() {
   });
 
   ConnectionManager cm = new ConnectionManager();
-  cm.registerConnection(0, () => new TransportWebsocket());
+  cm.registerConnection(0, () => new TransportWebsocket('ws://localhost:4040/ws'));
 
-  cm.connect('localhost', 4040);
+  cm.connect();
 
 //  cm.onOpen.listen((Event e) {
 //    print(e);

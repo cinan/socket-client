@@ -18,7 +18,8 @@ abstract class Transport {
   Stream<Event> get onError;
   Stream<CloseEvent> get onClose;
 
-  Transport initialize(String host, [int port = 80, settings]);
+  Transport(String host, [settings]);
+  Transport initialize();
 
   void connect();
   void disconnect([int code, String reason]);

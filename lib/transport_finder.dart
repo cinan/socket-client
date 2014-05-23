@@ -30,14 +30,14 @@ class TransportFinder {
     _timeout = new Duration(seconds: timeout);
   }
 
-  Future findConnection(String host, int port, settings) {
+  Future findConnection() {
     _futureConnection = new Completer();
 
     for (Map tb in _availableConnectionsInfoSorted) {
       tb['isSupported'] = null;
     }
 
-    _fireConnectionsInParallel(host, port, settings);
+    _fireConnectionsInParallel();
 
     _listenToConnectionsResponses();
     _waitUntilSupportedConnectionIsFound();
@@ -45,11 +45,11 @@ class TransportFinder {
     return _futureConnection.future;
   }
 
-  void _fireConnectionsInParallel(String host, int port, settings) {
+  void _fireConnectionsInParallel() {
     _connectionsStreamController = new StreamController.broadcast();
 
     for (Map connInfo in _availableConnectionsInfoSorted) {
-      Future isSupportedResponse = connInfo['conn']().initialize(host, port, settings).supported;
+      Future isSupportedResponse = connInfo['conn']().supported;
       isSupportedResponse.then((bool supported) {
         if (_connectionsStreamController.isClosed) {
           return;

@@ -38,8 +38,8 @@ class ConnectionManager {
     _messager.registerConnection(priority, connection);
   }
 
-  void connect(String host, [int port = 80, settings]) {
-    return _messager.connect(host, port, settings);
+  void connect() {
+    _messager.connect();
   }
 
   Future send(data) {

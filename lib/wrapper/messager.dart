@@ -57,8 +57,8 @@ class Messager {
     _caller.registerConnection(priority, connection);
   }
 
-  void connect(String host, [int port, settings]) {
-    _caller.connect(host, port, settings);
+  void connect() {
+    _caller.connect();
     _setupListeners();
   }
 

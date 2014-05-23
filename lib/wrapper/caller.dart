@@ -16,8 +16,7 @@ class Caller {
 
   Transport _transport;
 
-  String _host;
-  int _port;
+  String _url;
   var _settings;
 
   HashMap<int, TransportBuilder> _availableConnections = new HashMap();
@@ -37,11 +36,7 @@ class Caller {
     _availableConnections[priority] = connection;
   }
 
-  void connect(String host, [int port, settings]) {
-    _host = host;
-    _port = port;
-    _settings = settings;
-
+  void connect() {
     _transportFinder.connections = _availableConnections;
     _findConnection();
 
@@ -57,9 +52,8 @@ class Caller {
   }
 
   void _setupConnection(TransportBuilder connection) {
-    //TODO: merge TransportBuilder and initialize into one callable
     _transport = connection();
-    _transport.initialize(_host, _port, _settings).connect();
+    _transport.connect();
 
     _setupListeners();
   }
@@ -80,7 +74,7 @@ class Caller {
   void _findConnection() {
     // TODO skusam znova alebo vyhodim vynimku po x-tom opakovani
 
-    _transportFinder.findConnection(_host, _port, _settings).then((TransportBuilder conn) {
+    _transportFinder.findConnection().then((TransportBuilder conn) {
       (conn == null) ? _findConnection() : _setupConnection(conn);
     });
   }
