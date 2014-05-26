@@ -7,7 +7,8 @@ class Messager {
   // Mam zarucene, ze iterujem v takom poradi, ako boli elementy vlozene
   LinkedHashMap<dynamic, String> _messageBuffer = new LinkedHashMap<dynamic, String>();
 
-  Stream<Event> get onOpen => _caller.onOpen;
+  StreamController _onOpenController = new StreamController();
+  Stream<Event> get onOpen => _onOpenController.stream;
 
   Stream<MessageEvent> get onMessage {
     var transformer = new StreamTransformer.fromHandlers(handleData: (MessageEvent value, sink) {
@@ -100,15 +101,37 @@ class Messager {
   }
 
   void _setupListeners() {
-    onOpen.listen((_) {
+    _caller.onOpen.pipe(new MessagerConnectionListener(_onOpenController, () {
       _log.info('som (znova) pripojeny, odosielam neodoslane spravy');
       _sendMessageBuffer();
-    });
+    }));
   }
 
   void _sendMessageBuffer() {
     for (String msg in _messageBuffer.values) {
       _caller.send(msg);
     }
+  }
+}
+
+class MessagerConnectionListener implements StreamConsumer {
+
+  StreamController _streamController;
+  Function _callback;
+
+  MessagerConnectionListener(this._streamController, this._callback);
+
+  Future addStream(Stream s) {
+    s.listen((event) {
+      _callback();
+
+      _streamController.add(event);
+    });
+
+    return new Completer().future;
+  }
+
+  Future close() {
+    _streamController.close();
   }
 }
