@@ -10,36 +10,8 @@ class Messager {
   StreamController _onOpenController = new StreamController();
   Stream<Event> get onOpen => _onOpenController.stream;
 
-  Stream<MessageEvent> get onMessage {
-    var transformer = new StreamTransformer.fromHandlers(handleData: (MessageEvent value, sink) {
-      try {
-        Map decodedMessage = JSON.decode(value.data);
-
-        if (_isConfirmation(decodedMessage)) {
-          _confirmMessage(decodedMessage);
-          return;
-        }
-
-        // ak ide o potvrdenie spravy, tak to je sprava iba pre mna a moje Futures
-        if (decodedMessage.containsKey('body')) {
-          MessageEvent modifiedEvent = new MessageEvent(
-              value.type,
-              cancelable: false,
-              data: decodedMessage['body'],
-              origin: value.origin,
-              lastEventId: '');
-
-          sink.add(modifiedEvent);
-        } else {
-          throw new FormatException();
-        }
-      } on FormatException {
-        _log.warning('Malformatted message received');
-      }
-    });
-
-    return _caller.onMessage.transform(transformer);
-  }
+  StreamController _onMessageController = new StreamController();
+  Stream<Event> get onMessage => _onMessageController.stream;
 
   Stream<Event> get onError => _caller.onError;
 
@@ -51,8 +23,7 @@ class Messager {
 
   Logger _log = new Logger('Messager');
 
-  Messager() {
-  }
+  Messager();
 
   void registerConnection(int priority, TransportBuilder connection) {
     _caller.registerConnection(priority, connection);
@@ -82,12 +53,16 @@ class Messager {
 
   bool _isConfirmation(Map decodedMessage) {
     String messageType = decodedMessage['type'];
-    var messageId = decodedMessage['id'];
+
+    var messageId = null;
+    if (decodedMessage['body'] != null) {
+      messageId = decodedMessage['body']['id'];
+    }
 
     return ((messageType == 'confirmation') && (messageId != null));
   }
 
-  void _confirmMessage(Map decodedConfirmation) {
+  void _finalizeMessage(Map decodedConfirmation) {
     var messageId = decodedConfirmation['id'];
 
     if (_completers.containsKey(messageId)) {
@@ -101,9 +76,15 @@ class Messager {
   }
 
   void _setupListeners() {
-    _caller.onOpen.pipe(new MessagerConnectionListener(_onOpenController, () {
+    _caller.onOpen.pipe(new MessagerStreamConsumer(_onOpenController, (event) {
       _log.info('som (znova) pripojeny, odosielam neodoslane spravy');
       _sendMessageBuffer();
+
+      return event;
+    }));
+
+    _caller.onMessage.pipe(new MessagerStreamConsumer(_onMessageController, (MessageEvent event) {
+      return _decodeIncomingEventMessage(event);
     }));
   }
 
@@ -112,26 +93,57 @@ class Messager {
       _caller.send(msg);
     }
   }
+
+  MessageEvent _decodeIncomingEventMessage(MessageEvent event) {
+
+    try {
+      Map decodedMessage = JSON.decode(event.data);
+
+      if (_isConfirmation(decodedMessage)) {
+        _finalizeMessage(decodedMessage);
+        return event;
+      }
+
+      // ak ide o potvrdenie spravy, tak to je sprava iba pre mna a moje Futures
+      if (decodedMessage.containsKey('body')) {
+        MessageEvent modifiedEvent = new MessageEvent(
+            event.type,
+            cancelable: false,
+            data: decodedMessage['body'],
+            origin: event.origin,
+            lastEventId: '');
+
+        return modifiedEvent;
+      } else {
+        throw new FormatException();
+      }
+    } on FormatException {
+      _log.warning('Malformatted message received');
+      return null;
+    }
+  }
 }
 
-class MessagerConnectionListener implements StreamConsumer {
+class MessagerStreamConsumer implements StreamConsumer {
 
   StreamController _streamController;
   Function _callback;
 
-  MessagerConnectionListener(this._streamController, this._callback);
+  MessagerStreamConsumer(this._streamController, this._callback);
 
   Future addStream(Stream s) {
     s.listen((event) {
-      _callback();
+      event = _callback(event);
 
-      _streamController.add(event);
+      if (event != null) {
+        _streamController.add(event);
+      }
     });
 
     return new Completer().future;
   }
 
   Future close() {
-    _streamController.close();
+    return _streamController.close();
   }
 }
