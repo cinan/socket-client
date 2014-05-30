@@ -17,7 +17,6 @@ class TransportWebsocket implements Transport {
     });
   }
 
-
   Future get _supported {
     _log.info('Checking if websocket is supported');
 
@@ -26,7 +25,7 @@ class TransportWebsocket implements Transport {
     }
 
     if (!WebSocket.supported)
-      return new Future(false);
+      return new Future.value(false);
 
     connect();
 
@@ -53,8 +52,7 @@ class TransportWebsocket implements Transport {
   Stream<Event>        get onError    => _socket.onError;
   Stream<CloseEvent>   get onClose    => _socket.onClose;
 
-  TransportWebsocket(String this._url, [this._settings]) {
-  }
+  TransportWebsocket(String this._url, [this._settings]);
 
   void connect() {
     if (_url == null) {
@@ -69,10 +67,6 @@ class TransportWebsocket implements Transport {
   }
 
   void send(data) {
-    /*
-      testovaci transport:
-      DI poslem server (kam posielam data)
-     */
     _socket.send(data);
   }
 }
