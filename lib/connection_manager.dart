@@ -46,4 +46,8 @@ class ConnectionManager {
     return _messager.send(data);
   }
 
+  void disconnect() {
+    _messager.disconnect();
+  }
+
 }

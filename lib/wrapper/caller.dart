@@ -18,6 +18,7 @@ class Caller {
 
   String _url;
   var _settings;
+  bool _forceDisconnect = false;
 
   HashMap<int, TransportBuilder> _availableConnections = new HashMap();
 
@@ -37,6 +38,8 @@ class Caller {
   }
 
   void connect() {
+    _forceDisconnect = false;
+
     _transportFinder.connections = _availableConnections;
     _findConnection();
 
@@ -49,6 +52,17 @@ class Caller {
     if (connected) {
       _transport.send(data);
     }
+  }
+
+  void disconnect() {
+    if (connected) {
+      _transport.disconnect();
+    }
+
+    _transport = null;
+    _forceDisconnect = true;
+
+    _log.info('Disconnected.');
   }
 
   void _setupConnection(TransportBuilder connection) {
@@ -65,9 +79,11 @@ class Caller {
     _transport.onClose.pipe(new ConnectionListener(_onCloseController));
 
     _transport.onClose.listen((_) {
-      _log.info('som odpojeny, skusam sa pripojit znova');
+      if (!_forceDisconnect) {
+        _log.info('som odpojeny, skusam sa pripojit znova');
 
-      _findConnection();
+        _findConnection();
+      }
     });
   }
 
@@ -95,6 +111,6 @@ class ConnectionListener implements StreamConsumer {
   }
 
   Future close() {
-    _streamController.close();
+    return _streamController.close();
   }
 }

@@ -51,6 +51,10 @@ class Messager {
     return _completers[_nextSendId].future;
   }
 
+  void disconnect() {
+    _caller.disconnect();
+  }
+
   bool _isConfirmation(Map decodedMessage) {
     String messageType = decodedMessage['type'];
 
