@@ -66,7 +66,7 @@ class TransportWebsocket implements Transport {
     _socket.close(code, reason);
   }
 
-  void send(data) {
+  void send(String data) {
     _socket.send(data);
   }
 }

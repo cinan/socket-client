@@ -23,5 +23,5 @@ abstract class Transport {
   void connect();
   void disconnect([int code, String reason]);
 
-  void send(data);
+  void send(String data);
 }
