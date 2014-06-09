@@ -53,16 +53,16 @@ class PollingTransport implements Transport {
   String get url        => _url;
   String get humanType  => 'polling';
 
-  StreamController<Event> _onOpenController = new StreamController.broadcast();
+  StreamController<Event> _onOpenController = new StreamController();
   Stream<Event>        get onOpen     => _onOpenController.stream;
 
-  StreamController<MessageEvent> _onMessageController = new StreamController.broadcast();
+  StreamController<MessageEvent> _onMessageController = new StreamController();
   Stream<MessageEvent> get onMessage  => _onMessageController.stream;
 
-  StreamController<Event> _onErrorController = new StreamController.broadcast();
+  StreamController<Event> _onErrorController = new StreamController();
   Stream<Event>        get onError    => _onErrorController.stream;
 
-  StreamController<CloseEvent> _onCloseController = new StreamController.broadcast();
+  StreamController<CloseEvent> _onCloseController = new StreamController();
   Stream<CloseEvent>   get onClose    => _onCloseController.stream;
 
   StreamController<MessageEvent> _onPongController = new StreamController();

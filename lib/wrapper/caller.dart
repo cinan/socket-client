@@ -2,16 +2,16 @@ part of connection_manager;
 
 class Caller {
 
-  StreamController _onOpenController = new StreamController();
+  StreamController _onOpenController = new StreamController.broadcast();
   Stream<Event> get onOpen => _onOpenController.stream;
 
-  StreamController _onMessageController = new StreamController();
+  StreamController _onMessageController = new StreamController.broadcast();
   Stream<MessageEvent> get onMessage => _onMessageController.stream;
 
-  StreamController _onErrorController = new StreamController();
+  StreamController _onErrorController = new StreamController.broadcast();
   Stream<Event> get onError => _onErrorController.stream;
 
-  StreamController _onCloseController = new StreamController();
+  StreamController _onCloseController = new StreamController.broadcast();
   Stream<CloseEvent> get onClose => _onCloseController.stream;
 
   Transport _transport;
@@ -64,10 +64,10 @@ class Caller {
   void _setupConnection(TransportBuilder connection) {
     _transport = connection();
 
-    // Must be before transport connect
-    _setupListeners();
-
     _transport.connect();
+
+    // Must be after transport connect
+    _setupListeners();
 
     _log.fine('Using transport: ${_transport.humanType}');
   }
@@ -78,7 +78,7 @@ class Caller {
     _transport.onError.pipe(new ConnectionListener(_onErrorController));
     _transport.onClose.pipe(new ConnectionListener(_onCloseController));
 
-    _transport.onClose.listen((_) {
+    onClose.listen((_) {
       if (!_forceDisconnect) {
         _log.info('Disconnected, trying to reconnect');
 
