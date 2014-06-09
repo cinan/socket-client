@@ -1,8 +1,8 @@
 part of connection_manager;
 
-class TransportWebsocketTesting extends TransportWebsocket {
+class WebsocketTestingTransport extends WebsocketTransport {
 
-  Logger _log = new Logger('ConnectionWeboscketTesting');
+  Logger _log = new Logger('WeboscketTestingTransport');
 
   bool _forceDisconnected = false;
   bool _initOnCreate      = true;
@@ -15,7 +15,7 @@ class TransportWebsocketTesting extends TransportWebsocket {
 
   int get readyState => _forceDisconnected ? Transport.CLOSED : _socket.readyState;
 
-  TransportWebsocketTesting(String url, [settings]) : super(url, settings);
+  WebsocketTestingTransport(String url, [settings]) : super(url, settings);
 
   void asDisconnected([bool disconnect = true]) {
     _forceDisconnected = disconnect;

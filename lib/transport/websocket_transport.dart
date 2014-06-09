@@ -1,9 +1,9 @@
 part of connection_manager;
 
-class TransportWebsocket implements Transport {
+class WebsocketTransport implements Transport {
 
   WebSocket _socket;
-  Logger _log = new Logger('ConnectionWebsocket');
+  Logger _log = new Logger('WebsocketTransport');
 
   Completer _supportedCompleter;
 
@@ -52,7 +52,7 @@ class TransportWebsocket implements Transport {
   Stream<Event>        get onError    => _socket.onError;
   Stream<CloseEvent>   get onClose    => _socket.onClose;
 
-  TransportWebsocket(String this._url, [this._settings]);
+  WebsocketTransport(String this._url, [this._settings]);
 
   void connect() {
     if (_url == null) {

@@ -3,11 +3,11 @@ part of client_tests;
 connection_manager_tests() {
   String wsUrl = 'ws://localhost:4040/ws';
   ConnectionManager cm;
-  TransportWebsocketTesting t;
+  WebsocketTestingTransport t;
 
   setUp(() {
     cm = new ConnectionManager();
-    t = new TransportWebsocketTesting(wsUrl);
+    t = new WebsocketTestingTransport(wsUrl);
     cm.registerConnection(0, () => t);
   });
 

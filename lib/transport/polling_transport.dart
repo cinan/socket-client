@@ -1,8 +1,8 @@
 part of connection_manager;
 
-class TransportPolling implements Transport {
+class PollingTransport implements Transport {
 
-  Logger _log = new Logger('ConnectionPolling');
+  Logger _log = new Logger('PollingTransport');
 
   String _url;
 
@@ -68,7 +68,7 @@ class TransportPolling implements Transport {
   StreamController<MessageEvent> _onPongController = new StreamController();
   Stream<MessageEvent> get _onPong => _onPongController.stream;
 
-  TransportPolling(String this._url);
+  PollingTransport(String this._url);
 
   void connect() {
     if (_url == null) {
