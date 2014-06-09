@@ -42,10 +42,6 @@ class Caller {
 
     _transportFinder.connections = _availableConnections;
     _findConnection();
-
-//    new Timer(new Duration(seconds: 5), () {
-//      _connection.disconnect();
-//    });
   }
 
   void send(data) {
@@ -67,9 +63,13 @@ class Caller {
 
   void _setupConnection(TransportBuilder connection) {
     _transport = connection();
+
+    // Must be before transport connect
+    _setupListeners();
+
     _transport.connect();
 
-    _setupListeners();
+    _log.fine('Using transport: ${_transport.humanType}');
   }
 
   void _setupListeners() {
@@ -80,7 +80,7 @@ class Caller {
 
     _transport.onClose.listen((_) {
       if (!_forceDisconnect) {
-        _log.info('som odpojeny, skusam sa pripojit znova');
+        _log.info('Disconnected, trying to reconnect');
 
         _findConnection();
       }
