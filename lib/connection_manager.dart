@@ -13,6 +13,7 @@ part 'wrapper/caller.dart';
 
 part 'transport_finder.dart';
 part 'transport/transport_websocket.dart';
+part 'transport/transport_polling.dart';
 part 'transport/transport_websocket_testing.dart';
 
 typedef Transport TransportBuilder();
