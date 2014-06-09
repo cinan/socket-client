@@ -10,16 +10,17 @@ void main() {
   });
 
   ConnectionManager cm = new ConnectionManager();
-  cm.registerConnection(0, () => new TransportWebsocket('ws://localhost:4040/ws'));
+//  cm.registerConnection(0, () => new WebsocketTransport('ws://localhost:4040/ws'));
+  cm.registerConnection(0, () => new PollingTransport('http://localhost:4040/polling'));
 
   cm.connect();
 
-//  cm.onOpen.listen((Event e) {
-//    print(e);
-//  });
+  cm.onOpen.listen((Event e) {
+    print('Im opened');
+  });
 
   cm.onMessage.listen((MessageEvent e) {
-    print(e.data);
+//    print('Prisla mi sprava: ' + e.data);
   });
 
   cm.onClose.listen((e) {

@@ -122,9 +122,9 @@ class PollingTransport implements Transport {
   }
 
   void _ping() {
-    String data = JSON.encode({
+    String data = new JsonObject.fromMap({
         'type': 'ping'
-    });
+    }).toString();
 
     send(data);
   }
@@ -135,7 +135,7 @@ class PollingTransport implements Transport {
   }
 
   bool _isPong(HttpRequest response) {
-    Map<String,String> jsonResp = JSON.decode(response.responseText);
+    JsonObject jsonResp = new JsonObject.fromJsonString(response.responseText);
     return (jsonResp['type'] == 'pong');
   }
 }

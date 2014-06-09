@@ -4,7 +4,9 @@ import 'dart:html';
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
+
 import 'package:logging/logging.dart';
+import 'package:json_object/json_object.dart';
 
 part 'interface/transport.dart';
 

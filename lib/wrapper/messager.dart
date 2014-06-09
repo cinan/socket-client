@@ -38,10 +38,10 @@ class Messager {
     // TODO tu skor nejaky hash dat namiesto incrementu
     _nextSendId++;
 
-    String message = JSON.encode({
+    String message = new JsonObject.fromMap({
         'id': _nextSendId,
         'body': data
-    });
+    }).toString();
 
     _log.info('pridavam do buffera $message');
     _messageBuffer[_nextSendId] = message;
@@ -55,7 +55,7 @@ class Messager {
     _caller.disconnect();
   }
 
-  bool _isConfirmation(Map decodedMessage) {
+  bool _isConfirmation(JsonObject decodedMessage) {
     String messageType = decodedMessage['type'];
 
     var messageId = null;
@@ -66,7 +66,7 @@ class Messager {
     return ((messageType == 'confirmation') && (messageId != null));
   }
 
-  void _finalizeMessage(Map decodedConfirmation) {
+  void _finalizeMessage(JsonObject decodedConfirmation) {
     var messageId = decodedConfirmation['id'];
 
     if (_completers.containsKey(messageId)) {
@@ -101,7 +101,7 @@ class Messager {
   MessageEvent _decodeIncomingEventMessage(MessageEvent event) {
 
     try {
-      Map decodedMessage = JSON.decode(event.data);
+      JsonObject decodedMessage = new JsonObject.fromJsonString(event.data);
 
       if (_isConfirmation(decodedMessage)) {
         _finalizeMessage(decodedMessage);
