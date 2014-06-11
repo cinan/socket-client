@@ -1,0 +1,4 @@
+- extract heartbeat from http polling and add it to websocket
+- maybe Messager has too many responsibilities
+- test switching transports
+- yeah, more tests
