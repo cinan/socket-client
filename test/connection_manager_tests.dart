@@ -1,6 +1,6 @@
 part of client_tests;
 
-connection_manager_tests() {
+connectionManagerTests() {
   String wsUrl = 'ws://localhost:4040/ws';
   ConnectionManager cm;
   WebsocketTestingTransport t;
