@@ -7,15 +7,17 @@ class Messager {
   // Mam zarucene, ze iterujem v takom poradi, ako boli elementy vlozene
   LinkedHashMap<dynamic, String> _messageBuffer = new LinkedHashMap<dynamic, String>();
 
-  StreamController _onOpenController = new StreamController();
-  Stream<Event> get onOpen => _onOpenController.stream;
+  StreamController<Event>         _onOpenController     = new StreamController<Event>();
+  Stream<Event>                   get onOpen            => _onOpenController.stream;
 
-  StreamController _onMessageController = new StreamController();
-  Stream<Event> get onMessage => _onMessageController.stream;
+  StreamController<MessageEvent>  _onMessageController  = new StreamController<MessageEvent>();
+  Stream<MessageEvent>            get onMessage         => _onMessageController.stream;
 
-  Stream<Event> get onError => _caller.onError;
+  StreamController<Event>         _onErrorController    = new StreamController<Event>();
+  Stream<Event>                   get onError           => _onErrorController.stream;
 
-  Stream<CloseEvent> get onClose => _caller.onClose;
+  StreamController<CloseEvent>    _onCloseController    = new StreamController<CloseEvent>();
+  Stream<CloseEvent>              get onClose           => _onCloseController.stream;
 
   Caller _caller = new Caller();
   int _nextSendId = 0;
@@ -80,17 +82,25 @@ class Messager {
   }
 
   void _setupListeners() {
-    _caller.onOpen.pipe(new MyStreamConsumer(_onOpenController, (event) {
-      _log.info('som (znova) pripojeny, odosielam neodoslane spravy');
-      _sendMessageBuffer();
-
-      return event;
-    }));
-
-    _caller.onMessage.pipe(new MyStreamConsumer(_onMessageController, (MessageEvent event) {
-      return _decodeIncomingEventMessage(event);
-    }));
+    _caller.onOpen.pipe(new MyStreamConsumer(_onOpenController, _onOpenProcess));
+    _caller.onMessage.pipe(new MyStreamConsumer(_onMessageController, _onMessageProcess));
+    _caller.onError.pipe(new MyStreamConsumer(_onErrorController, _onErrorProcess));
+    _caller.onClose.pipe(new MyStreamConsumer(_onCloseController, _onCloseProcess));
   }
+
+  Event _onOpenProcess(Event event) {
+    _log.info('som (znova) pripojeny, odosielam neodoslane spravy');
+    _sendMessageBuffer();
+
+    return event;
+  }
+
+  MessageEvent _onMessageProcess(MessageEvent event) {
+    return _decodeIncomingEventMessage(event);
+  }
+
+  Event _onErrorProcess(Event event) => event;
+  CloseEvent _onCloseProcess(CloseEvent event) => event;
 
   void _sendMessageBuffer() {
     for (String msg in _messageBuffer.values) {
@@ -99,7 +109,6 @@ class Messager {
   }
 
   MessageEvent _decodeIncomingEventMessage(MessageEvent event) {
-
     try {
       JsonObject decodedMessage = new JsonObject.fromJsonString(event.data);
 

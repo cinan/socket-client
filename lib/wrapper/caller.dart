@@ -76,15 +76,15 @@ class Caller {
     _transport.onOpen.pipe(new MyStreamConsumer(_onOpenController));
     _transport.onMessage.pipe(new MyStreamConsumer(_onMessageController));
     _transport.onError.pipe(new MyStreamConsumer(_onErrorController));
-    _transport.onClose.pipe(new MyStreamConsumer(_onCloseController));
-
-    onClose.listen((_) {
+    _transport.onClose.pipe(new MyStreamConsumer(_onCloseController, (CloseEvent event) {
       if (!_forceDisconnect) {
         _log.info('Disconnected, trying to reconnect');
 
         _findConnection();
       }
-    });
+
+      return event;
+    }));
   }
 
   void _findConnection() {
