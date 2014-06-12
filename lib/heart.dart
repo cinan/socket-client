@@ -2,6 +2,8 @@ part of connection_manager;
 
 class Heart {
 
+  Logger _log = new Logger('Heartbeat');
+
   Duration _interval;
 
   Timer _timer;
@@ -17,6 +19,7 @@ class Heart {
   bool get isBeating => (timer == null) ? false : timer.isActive;
 
   void set beatCallback(callback(String pingData)) {
+    _lastResponseTime = new DateTime.now().millisecondsSinceEpoch;
     _sendBeatCallback = callback;
   }
 
@@ -51,14 +54,20 @@ class Heart {
 
     if (_sendBeatCallback != null)
       _sendBeatCallback(pingData);
+
+    _log.finest('sent beat');
   }
 
   void die() {
+    _log.finest('heartbeat stopped');
+
     if (_timer != null)
       _timer.cancel();
   }
 
   void addResponse() {
+   _log.finest('pong received');
+
     DateTime now = new DateTime.now();
     _lastResponseTime = now.millisecondsSinceEpoch;
 
@@ -68,9 +77,6 @@ class Heart {
   }
 
   bool _isAlive() {
-    if (_lastResponseTime == 0)
-      return true;
-
     int now = new DateTime.now().millisecondsSinceEpoch;
     return (now - _lastResponseTime <= (2 * _interval.inMilliseconds));
   }

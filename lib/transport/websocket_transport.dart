@@ -10,6 +10,8 @@ class WebsocketTransport implements Transport {
   String _url;
   var _settings;
 
+  Heart _heart = new Heart(new Duration(seconds: 10));
+
   Future get supported {
     return _supported.then((res){
       _supportedCompleter = null;
@@ -43,30 +45,120 @@ class WebsocketTransport implements Transport {
     return _supportedCompleter.future;
   }
 
-  int get readyState    => _socket.readyState;
-  String get url        => _socket.url;
+  int get readyState    => (_socket == null) ? Transport.CLOSED : _socket.readyState;
+  String get url        => _url;
   String get humanType  => 'websocket';
 
-  Stream<Event>        get onOpen     => _socket.onOpen;
-  Stream<MessageEvent> get onMessage  => _socket.onMessage;
-  Stream<Event>        get onError    => _socket.onError;
-  Stream<CloseEvent>   get onClose    => _socket.onClose;
+  StreamController<Event>         _onOpenController     = new StreamController<Event>();
+  Stream<Event>                   get onOpen            => _onOpenController.stream;
+
+  StreamController<MessageEvent>  _onMessageController  = new StreamController<MessageEvent>();
+  Stream<MessageEvent>            get onMessage         => _onMessageController.stream;
+
+  StreamController<Event>         _onErrorController    = new StreamController<Event>();
+  Stream<Event>                   get onError           => _onErrorController.stream;
+
+  StreamController<CloseEvent>    _onCloseController    = new StreamController<CloseEvent>();
+  Stream<CloseEvent>              get onClose           => _onCloseController.stream;
 
   WebsocketTransport(String this._url, [this._settings]);
 
   void connect() {
-    if (_url == null) {
-      throw new FormatException('Host has not been initialized');
-    }
-
     _socket = new WebSocket(_url, _settings);
+    _setupListeners();
   }
 
   void disconnect([int code, String reason]) {
-    _socket.close(code, reason);
+    _heart.die();
+
+    if ((readyState == Transport.OPEN) || (readyState == Transport.CONNECTING)) {
+      _socket.close(code, reason);
+    }
   }
 
   void send(String data) {
-    _socket.send(data);
+    if (_socket != null) {
+      _socket.send(data);
+    }
+  }
+
+  void _setupListeners() {
+
+    // TODO still repeating this pattern. Replace _Listener class with generic one
+    _socket.onOpen.pipe(new _Listener(_onOpenController, _onOpenProcess));
+    _socket.onMessage.pipe(new _Listener(_onMessageController, _onMessageProcess));
+    _socket.onError.pipe(new _Listener(_onErrorController, _onErrorProcess));
+    _socket.onClose.pipe(new _Listener(_onCloseController, _onCloseProcess));
+  }
+
+  void _startHeartbeat() {
+    _heart.startBeating();
+    _heart.deathMessageCallback = () => disconnect(1000, 'timeout');
+    _heart.beatCallback = _ping;
+  }
+
+  void _ping(String data) {
+    send(data);
+  }
+
+  bool _isPong(String response) {
+    JsonObject jsonResp = new JsonObject.fromJsonString(response);
+    if (jsonResp.containsKey('type')) {
+      return (jsonResp['type'] == 'pong');
+    }
+    return false;
+  }
+
+  Event _onOpenProcess(Event event) {
+    _log.fine('Im opened');
+
+    _startHeartbeat();
+    return event;
+  }
+
+  int _onMessageProcess(MessageEvent event) {
+    _log.fine('Message received');
+
+    if (_isPong(event.data)) {
+      _heart.addResponse();
+      return null;
+    }
+
+    _log.fine('Message received');
+    return event;
+  }
+
+  Event _onErrorProcess(Event event) => event;
+
+  CloseEvent _onCloseProcess(CloseEvent event) {
+    disconnect();
+    return event;
+  }
+
+}
+
+class _Listener implements StreamConsumer {
+
+  StreamController _streamController;
+  Function _callback;
+
+  _Listener(this._streamController, [this._callback]);
+
+  Future addStream(Stream s) {
+    s.listen((event) {
+      if (_callback != null) {
+        event = _callback(event);
+      }
+
+      if (event != null) {
+        _streamController.add(event);
+      }
+    });
+
+    return new Completer().future;
+  }
+
+  Future close() {
+    return _streamController.close();
   }
 }

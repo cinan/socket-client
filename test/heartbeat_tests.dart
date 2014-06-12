@@ -28,9 +28,19 @@ heartbeatTests() {
 
   test('after start beats are sent periodically', () {
     int i = 0;
+    int j = 0;
 
     heart.beatCallback = (_) => i++;
     heart.startBeating();
+
+    new Timer.periodic(new Duration(milliseconds: 80), expectAsync((Timer t) {
+      heart.addResponse();
+      j++;
+
+      if (j == 10) {
+        t.cancel();
+      }
+    }, count: 10));
 
     retryAsync(() => expect(i, greaterThan(8)));
   });
@@ -47,7 +57,7 @@ heartbeatTests() {
     expect(done, isTrue);
   });
 
-  test('death message callback is called if no pong responses are received', () {
+  test('death message callback is called if no pongs are received', () {
     bool deathHappened = false;
     int i = 0;
 
@@ -57,7 +67,7 @@ heartbeatTests() {
 
     heart.startBeating();
 
-    new Timer.periodic(new Duration(milliseconds: 100), expectAsync((Timer t) {
+    new Timer.periodic(new Duration(milliseconds: 80), expectAsync((Timer t) {
       heart.addResponse();
       i++;
 
