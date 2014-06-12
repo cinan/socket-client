@@ -73,6 +73,7 @@ class PollingTransport implements Transport {
   }
 
   void disconnect([int code, String reason]) {
+    _heart.die();
     if ((readyState == Transport.OPEN) || (readyState == Transport.CONNECTING)) {
       _readyState = Transport.CLOSED;
 
