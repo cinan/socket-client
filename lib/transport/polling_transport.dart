@@ -154,6 +154,7 @@ class PollingTransport implements Transport {
     if (jsonResp.containsKey('type')) {
       return (jsonResp['type'] == 'pong');
     }
+    return false;
   }
 }
 
