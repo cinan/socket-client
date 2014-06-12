@@ -80,14 +80,14 @@ class Messager {
   }
 
   void _setupListeners() {
-    _caller.onOpen.pipe(new MessagerStreamConsumer(_onOpenController, (event) {
+    _caller.onOpen.pipe(new MyStreamConsumer(_onOpenController, (event) {
       _log.info('som (znova) pripojeny, odosielam neodoslane spravy');
       _sendMessageBuffer();
 
       return event;
     }));
 
-    _caller.onMessage.pipe(new MessagerStreamConsumer(_onMessageController, (MessageEvent event) {
+    _caller.onMessage.pipe(new MyStreamConsumer(_onMessageController, (MessageEvent event) {
       return _decodeIncomingEventMessage(event);
     }));
   }
@@ -128,26 +128,3 @@ class Messager {
   }
 }
 
-class MessagerStreamConsumer implements StreamConsumer {
-
-  StreamController _streamController;
-  Function _callback;
-
-  MessagerStreamConsumer(this._streamController, this._callback);
-
-  Future addStream(Stream s) {
-    s.listen((event) {
-      event = _callback(event);
-
-      if (event != null) {
-        _streamController.add(event);
-      }
-    });
-
-    return new Completer().future;
-  }
-
-  Future close() {
-    return _streamController.close();
-  }
-}

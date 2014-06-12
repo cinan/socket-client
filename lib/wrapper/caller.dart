@@ -73,10 +73,10 @@ class Caller {
   }
 
   void _setupListeners() {
-    _transport.onOpen.pipe(new ConnectionListener(_onOpenController));
-    _transport.onMessage.pipe(new ConnectionListener(_onMessageController));
-    _transport.onError.pipe(new ConnectionListener(_onErrorController));
-    _transport.onClose.pipe(new ConnectionListener(_onCloseController));
+    _transport.onOpen.pipe(new MyStreamConsumer(_onOpenController));
+    _transport.onMessage.pipe(new MyStreamConsumer(_onMessageController));
+    _transport.onError.pipe(new MyStreamConsumer(_onErrorController));
+    _transport.onClose.pipe(new MyStreamConsumer(_onCloseController));
 
     onClose.listen((_) {
       if (!_forceDisconnect) {
@@ -93,24 +93,5 @@ class Caller {
     _transportFinder.findConnection().then((TransportBuilder conn) {
       (conn == null) ? _findConnection() : _setupConnection(conn);
     });
-  }
-}
-
-class ConnectionListener implements StreamConsumer {
-
-  StreamController _streamController;
-
-  ConnectionListener(this._streamController);
-
-  Future addStream(Stream s) {
-    s.listen((event) {
-      _streamController.add(event);
-    });
-
-    return new Completer().future;
-  }
-
-  Future close() {
-    return _streamController.close();
   }
 }

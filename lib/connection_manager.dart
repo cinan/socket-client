@@ -14,6 +14,7 @@ part 'wrapper/messager.dart';
 part 'wrapper/caller.dart';
 
 part 'heart.dart';
+part 'my_stream_consumer.dart';
 
 part 'transport_finder.dart';
 part 'transport/websocket_transport.dart';

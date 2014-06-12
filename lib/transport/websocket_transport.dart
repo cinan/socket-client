@@ -85,10 +85,10 @@ class WebsocketTransport implements Transport {
   void _setupListeners() {
 
     // TODO still repeating this pattern. Replace _Listener class with generic one
-    _socket.onOpen.pipe(new _Listener(_onOpenController, _onOpenProcess));
-    _socket.onMessage.pipe(new _Listener(_onMessageController, _onMessageProcess));
-    _socket.onError.pipe(new _Listener(_onErrorController, _onErrorProcess));
-    _socket.onClose.pipe(new _Listener(_onCloseController, _onCloseProcess));
+    _socket.onOpen.pipe(new MyStreamConsumer(_onOpenController, _onOpenProcess));
+    _socket.onMessage.pipe(new MyStreamConsumer(_onMessageController, _onMessageProcess));
+    _socket.onError.pipe(new MyStreamConsumer(_onErrorController, _onErrorProcess));
+    _socket.onClose.pipe(new MyStreamConsumer(_onCloseController, _onCloseProcess));
   }
 
   void _startHeartbeat() {
@@ -135,30 +135,4 @@ class WebsocketTransport implements Transport {
     return event;
   }
 
-}
-
-class _Listener implements StreamConsumer {
-
-  StreamController _streamController;
-  Function _callback;
-
-  _Listener(this._streamController, [this._callback]);
-
-  Future addStream(Stream s) {
-    s.listen((event) {
-      if (_callback != null) {
-        event = _callback(event);
-      }
-
-      if (event != null) {
-        _streamController.add(event);
-      }
-    });
-
-    return new Completer().future;
-  }
-
-  Future close() {
-    return _streamController.close();
-  }
 }
