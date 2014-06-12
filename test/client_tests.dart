@@ -15,6 +15,7 @@ import '../lib/connection_manager.dart';
 part 'async_helper.dart';
 part 'connection_manager_tests.dart';
 part 'polling_transport_tests.dart';
+part 'heartbeat_tests.dart';
 
 
 main() {
@@ -22,4 +23,5 @@ main() {
 
   connectionManagerTests();
   pollingTransportTests();
+  heartbeatTests();
 }

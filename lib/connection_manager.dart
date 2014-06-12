@@ -13,6 +13,8 @@ part 'interface/transport.dart';
 part 'wrapper/messager.dart';
 part 'wrapper/caller.dart';
 
+part 'heart.dart';
+
 part 'transport_finder.dart';
 part 'transport/websocket_transport.dart';
 part 'transport/polling_transport.dart';

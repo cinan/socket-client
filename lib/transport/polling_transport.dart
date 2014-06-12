@@ -7,11 +7,7 @@ class PollingTransport implements Transport {
   String _url;
   var _settings;
 
-  Timer _pollingTimer;
-  Duration _pollingInterval = new Duration(seconds: 10);
-
-  int _lastReqTime = 0;
-  int _lastRespTime = 0;
+  Heart _heart = new Heart(new Duration(seconds: 10));
 
   bool _isPending = false;
   Queue<String> _messageQueue = new Queue<String>();
@@ -20,7 +16,6 @@ class PollingTransport implements Transport {
 
   Future get supported {
     return _supported.then((Future res) {
-      _supportedCompleter = null;
       return res;
     });
   }
@@ -33,22 +28,14 @@ class PollingTransport implements Transport {
     _supportedCompleter = new Completer();
 
     _readyState = Transport.CONNECTING;
-    _ping();
 
-    StreamSubscription<MessageEvent> pongListener = _onPong.listen(null);
-    pongListener.onData((MessageEvent event) {
+    _heart.beatCallback = _ping;
+    _heart.responseCallback = (_) {
+      _supportedCompleter.complete(true);
+      _readyState = Transport.OPEN;
+    };
 
-      Map<String,String> resp =  JSON.decode(event.data);
-      if (resp['type'] == 'pong') {
-        _supportedCompleter.complete(true);
-        _readyState = Transport.OPEN;
-      } else {
-        _supportedCompleter.complete(false);
-        _readyState = Transport.CLOSED;
-      }
-
-      pongListener.cancel();
-    });
+    _heart.startBeating();
 
     return _supportedCompleter.future;
   }
@@ -60,27 +47,20 @@ class PollingTransport implements Transport {
   String get humanType  => 'polling';
 
   StreamController<Event> _onOpenController = new StreamController();
-  Stream<Event>        get onOpen     => _onOpenController.stream;
+  Stream<Event>         get onOpen          => _onOpenController.stream;
 
   StreamController<MessageEvent> _onMessageController = new StreamController();
-  Stream<MessageEvent> get onMessage  => _onMessageController.stream;
+  Stream<MessageEvent>  get onMessage                 => _onMessageController.stream;
 
-  StreamController<Event> _onErrorController = new StreamController();
-  Stream<Event>        get onError    => _onErrorController.stream;
+  StreamController<Event> _onErrorController  = new StreamController();
+  Stream<Event>         get onError           => _onErrorController.stream;
 
-  StreamController<Event> _onCloseController = new StreamController();
-  Stream<Event>   get onClose         => _onCloseController.stream;
-
-  StreamController<MessageEvent> _onPongController = new StreamController();
-  Stream<MessageEvent> get _onPong => _onPongController.stream;
+  StreamController<Event> _onCloseController  = new StreamController();
+  Stream<Event>         get onClose           => _onCloseController.stream;
 
   PollingTransport(String this._url, [this._settings]);
 
   void connect() {
-    if (_url == null) {
-      throw new FormatException('Host has not been initialized');
-    }
-
     _isPending = false;
     _messageQueue = new Queue();
 
@@ -94,7 +74,6 @@ class PollingTransport implements Transport {
 
   void disconnect([int code, String reason]) {
     if ((readyState == Transport.OPEN) || (readyState == Transport.CONNECTING)) {
-      _killHeartbeat();
       _readyState = Transport.CLOSED;
 
       // TODO: custom events, CloseEvent is reserved for Websocket usage only
@@ -119,8 +98,6 @@ class PollingTransport implements Transport {
   }
 
   void _makeRequest(String data, [bool isPing = false]) {
-    _lastReqTime = new DateTime.now().millisecondsSinceEpoch;
-
     if (!isPing) {
       // Pings aren't queued
       _isPending = true;
@@ -135,14 +112,10 @@ class PollingTransport implements Transport {
   }
 
   void _handleRequestResponse(HttpRequest resp) {
-    // TODO what if long timeout?
-
-    _lastRespTime = new DateTime.now().millisecondsSinceEpoch;
-
     MessageEvent e = _Transformer.responseToMessageEvent(resp, _url);
 
     if (_isPong(resp)) {
-      _onPongController.add(e);
+      _heart.addResponse();
     } else {
       _log.fine('Response returned');
       _onMessageController.add(e);
@@ -163,31 +136,12 @@ class PollingTransport implements Transport {
   }
 
   void _startHeartbeat() {
-    _pollingTimer = new Timer.periodic(_pollingInterval, (_) {
-      _checkResponseTimeout() ? _ping() : disconnect(1000, 'timeout');
-    });
+    _heart.startBeating();
+    _heart.deathMessageCallback = () => disconnect(1000, 'timeout');
+    _heart.beatCallback = _ping;
   }
 
-  void _killHeartbeat() {
-    if (_pollingTimer != null) {
-      _pollingTimer.cancel();
-    }
-  }
-
-  bool _checkResponseTimeout() {
-    if (_lastReqTime == 0)
-      return true;
-
-    int now = new DateTime.now().millisecondsSinceEpoch;
-    return (now - _lastReqTime <= (1.5 * _pollingInterval.inMilliseconds));
-  }
-
-  // Otestovat, ze ping nevola send ale makerequest priamo
-  void _ping() {
-    String data = new JsonObject.fromMap({
-        'type': 'ping'
-    }).toString();
-
+  void _ping(String data) {
     _makeRequest(data, true);
   }
 
@@ -197,7 +151,9 @@ class PollingTransport implements Transport {
 
   bool _isPong(HttpRequest response) {
     JsonObject jsonResp = new JsonObject.fromJsonString(response.responseText);
-    return (jsonResp['type'] == 'pong');
+    if (jsonResp.containsKey('type')) {
+      return (jsonResp['type'] == 'pong');
+    }
   }
 }
 

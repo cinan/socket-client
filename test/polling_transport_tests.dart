@@ -6,6 +6,7 @@ pollingTransportTests() {
 
   setUp(() {
     t = new PollingTestingTransport(url);
+    t.pollingInterval = new Duration(milliseconds: 100);
   });
 
   tearDown(() {
@@ -41,8 +42,10 @@ pollingTransportTests() {
 
   test('after disconnecting is state CLOSED', () {
     int state = -1;
+    bool wasOpened = false;
 
     t.onOpen.listen((_) {
+      wasOpened = true;
       t.disconnect();
     });
 
@@ -52,33 +55,13 @@ pollingTransportTests() {
 
     t.connect();
 
-    retryAsync(() => expect(state, Transport.CLOSED));
-  });
-
-  test('close connection if server is not responding', () {
-    t.pollingInteral = new Duration(milliseconds: 100);
-
-    var emitEvent;
-
-    t.onOpen.listen((_) {
-      t.invokeTimeout();
-    });
-
-    t.onClose.listen((e) {
-      emitEvent = e;
-    });
-
-    t.connect();
-
     retryAsync(() {
-      expect(emitEvent, isNotNull);
-      expect(emitEvent.type, 'close');
-      expect(t.readyState, Transport.CLOSED);
+      expect(wasOpened, isTrue);
+      expect(state, Transport.CLOSED);
     });
   });
 
   test('new request is not made until the previous one is completed', () {
-    t.pollingInteral = new Duration(milliseconds: 200);
     t.connect();
 
     bool hasRun = false;

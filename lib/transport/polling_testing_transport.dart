@@ -6,22 +6,12 @@ class PollingTestingTransport extends PollingTransport {
 
   Logger _log = new Logger('PollingTestingTransport');
 
-  bool _invokeTimeout = false;
-
   Duration _delayedResponse;
 
   PollingTestingTransport(String url, [settings]) : super(url, settings);
 
-  void set pollingInteral(Duration interval) {
-    _pollingInterval = interval;
-  }
-
-  void invokeTimeout([bool invoke = true]) {
-    _invokeTimeout = invoke;
-  }
-
-  bool _checkResponseTimeout() {
-    return _invokeTimeout ? false : super._checkResponseTimeout();
+  void set pollingInterval(Duration interval) {
+    _heart = new Heart(interval);
   }
 
   void responseTime(Duration responseTime) {
