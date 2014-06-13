@@ -33,6 +33,8 @@ class Caller {
     return _transport.readyState == Transport.OPEN;
   }
 
+  String get transportName => (_transport == null) ? '' : _transport.humanType;
+
   void registerConnection(int priority, TransportBuilder connection) {
     _availableConnections[priority] = connection;
   }

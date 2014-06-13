@@ -29,6 +29,8 @@ class ConnectionManager {
 
   Messager _messager;
 
+  String get transportName => _messager.transportName;
+
   ConnectionManager() {
     _messager = new Messager();
   }

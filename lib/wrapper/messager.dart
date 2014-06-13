@@ -4,6 +4,8 @@ class Messager {
 
   bool get connected => _caller.connected;
 
+  String get transportName => _caller.transportName;
+
   // Mam zarucene, ze iterujem v takom poradi, ako boli elementy vlozene
   LinkedHashMap<dynamic, String> _messageBuffer = new LinkedHashMap<dynamic, String>();
 
