@@ -4,7 +4,7 @@ import 'dart:async';
 import 'dart:html';
 
 import 'package:unittest/unittest.dart';
-import 'package:unittest/html_config.dart';
+import 'package:unittest/html_enhanced_config.dart';
 import 'package:mock/mock.dart';
 import 'package:json_object/json_object.dart';
 
@@ -30,7 +30,7 @@ main() {
     });
   }
 
-  useHtmlConfiguration();
+  useHtmlEnhancedConfiguration();
 
   transportFinderTests();
   connectionManagerTests();
