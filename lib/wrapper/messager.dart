@@ -39,7 +39,6 @@ class Messager {
   }
 
   Future send(data) {
-    // TODO tu skor nejaky hash dat namiesto incrementu
     _nextSendId++;
 
     String message = new JsonObject.fromMap({
@@ -47,7 +46,7 @@ class Messager {
         'body': data
     }).toString();
 
-    _log.info('pridavam do buffera $message');
+    _log.info('adding to the buffer: $message');
     _messageBuffer[_nextSendId] = message;
     _completers[_nextSendId] = new Completer();
 
