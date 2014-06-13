@@ -1,85 +1,141 @@
 part of client_tests;
 
 connectionManagerTests() {
-  String wsUrl = 'ws://localhost:4040/ws';
-  ConnectionManager cm;
-  WebsocketTestingTransport t;
+  group('connection manager tests', () {
 
-  setUp(() {
-    cm = new ConnectionManager();
-    t = new WebsocketTestingTransport(wsUrl);
-    cm.registerConnection(0, () => t);
-  });
+    String wsUrl = 'ws://localhost:4040/ws';
+    String psUrl = 'http://localhost:4040/polling';
 
-  test('listen to onOpen stream', () {
-    bool hasRun = false;
+    ConnectionManager cm;
+    WebsocketTestingTransport t;
 
-    cm.onOpen.listen((_) {
-      hasRun = true;
+    setUp(() {
+      cm = new ConnectionManager();
+      t = new WebsocketTestingTransport(wsUrl);
+      cm.registerConnection(0, () => t);
     });
 
-    cm.connect();
+    test('listen to onOpen stream', () {
+      bool hasRun = false;
 
-    retryAsync(() => expect(hasRun, isTrue));
-  });
+      cm.onOpen.listen((_) {
+        hasRun = true;
+      });
 
-  test('listen to onClose stream', () {
-    bool hasRun = false;
+      cm.connect();
 
-    cm.onOpen.listen((_) {
-      cm.disconnect();
+      retryAsync(() {
+        expect(hasRun, isTrue);
+        cm.disconnect();
+      });
     });
 
-    cm.onClose.listen((_) {
-      hasRun = true;
+    test('listen to onClose stream', () {
+      bool hasRun = false;
+
+      cm.onOpen.listen((_) {
+        cm.disconnect();
+      });
+
+      cm.onClose.listen((_) {
+        hasRun = true;
+      });
+
+      cm.connect();
+
+      retryAsync(() {
+        expect(hasRun, isTrue);
+      });
     });
 
-    cm.connect();
+    // TODO onMessage, onError listener, sending messages with unstable connection
 
-    retryAsync(() => expect(hasRun, isTrue));
-  });
+    test('connect and disconnect', () {
+      cm.connect();
 
-  // TODO onMessage, onError listener test
+      cm.onOpen.listen((_) {
+        cm.disconnect();
+      });
 
-  test('connect and disconnect', () {
-    bool connected = null;
-
-    cm.connect();
-
-    cm.onOpen.listen((_) {
-      cm.disconnect();
-      connected = cm.connected;
+      retryAsync(() {
+        expect(cm.connected, isNotNull);
+        expect(cm.connected, isFalse);
+      });
     });
 
-    retryAsync(() {
-      expect(connected, isNotNull);
-      expect(connected, isFalse);
+    test('sending message when connected', () {
+      cm.connect();
+
+      bool hasRun = false;
+
+      cm.send('weee').then(expectAsync((_) {
+        hasRun = true;
+      })).whenComplete(expectAsync(() {
+        expect(hasRun, isTrue);
+        cm.disconnect();
+      }));
     });
-  });
 
-  test('sending message when connected', () {
-    cm.connect();
+    test('behaviour of sending message when disconnected', () {
+      Mock tSpy = new Mock.spy(t);
+      cm.registerConnection(0, () => tSpy);
 
-    bool hasRun = false;
+      cm.connect();
 
-    cm.send('weee').then(expectAsync((_) {
-      hasRun = true;
-    })).whenComplete(() {
-      expect(hasRun, isTrue);
+      cm.onOpen.listen((_) {
+        tSpy.asDisconnected();
+        cm.send('message for you');
+
+        tSpy.getLogs(callsTo('send')).verify(neverHappened);
+        tSpy.asDisconnected(false);
+
+        cm.disconnect();
+      });
     });
-  });
 
-  test('sending message when disconnected', () {
-    Mock tSpy = new Mock.spy(t);
-    cm.registerConnection(0, () => tSpy);
+    test('switching transports when one transport fails', () {
+      WebsocketTestingTransport ws = new WebsocketTestingTransport(wsUrl);
+      PollingTestingTransport ps = new PollingTestingTransport(psUrl);
 
-    cm.connect();
+      Duration pollingInterval = new Duration(milliseconds: 500);
+      ws.responseTime(pollingInterval);
+      ps.responseTime(pollingInterval);
 
-    cm.onOpen.listen((_) {
-      tSpy.asDisconnected();
+      cm.registerConnection(0, () => ws);
+      cm.registerConnection(10, () => ps);
 
-      cm.send('message for you');
-      tSpy.getLogs(callsTo('send')).verify(neverHappened);
+      int onOpenCount = 0;
+      int onCloseCount = 0;
+
+      cm.onOpen.listen((_) {
+        onOpenCount++;
+
+        if (onOpenCount == 1) {
+          expect(cm.transportName, equals(ws.humanType));
+
+          ws.supported = false;
+          ws.disconnect(1000, 'disconnect ws', true);
+        } else if (onOpenCount == 2) {
+          expect(cm.transportName, equals(ps.humanType));
+        }
+      });
+
+      cm.onClose.listen((CloseEvent e) {
+        onCloseCount++;
+
+        if (onCloseCount == 1) {
+          expect(e.code, equals(1000));
+        }
+      });
+
+      cm.connect();
+
+      retryAsync(() {
+        expect(onCloseCount, equals(1));
+        expect(onOpenCount, equals(2));
+
+        cm.disconnect();
+      });
     });
   });
 }

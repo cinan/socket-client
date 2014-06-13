@@ -21,6 +21,15 @@ part 'websocket_transport_tests.dart';
 part 'heartbeat_tests.dart';
 
 main() {
+  bool verboseConsole = false;
+
+  if (verboseConsole) {
+    Logger.root.level = Level.ALL;
+    Logger.root.onRecord.listen((LogRecord rec) {
+      print('${rec.loggerName} ${rec.level.name}: ${rec.time}: ${rec.message}');
+    });
+  }
+
   useHtmlConfiguration();
 
   transportFinderTests();
@@ -28,4 +37,8 @@ main() {
   pollingTransportTests();
   websocketTransportTests();
   heartbeatTests();
+}
+
+disconnect(Transport t) {
+  t.disconnect(1000, 'disconnect', true);
 }

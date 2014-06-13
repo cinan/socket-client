@@ -64,10 +64,10 @@ class WebsocketTransport implements Transport {
     _setupListeners();
   }
 
-  void disconnect([int code, String reason]) {
+  void disconnect([int code, String reason, bool forceDisconnect = false]) {
     _heart.die();
 
-    if ((readyState == Transport.OPEN) || (readyState == Transport.CONNECTING)) {
+    if (forceDisconnect && ((readyState == Transport.OPEN) || (readyState == Transport.CONNECTING))) {
       _socket.close(code, reason);
     }
   }
@@ -79,8 +79,6 @@ class WebsocketTransport implements Transport {
   }
 
   void _setupListeners() {
-
-    // TODO still repeating this pattern. Replace _Listener class with generic one
     _socket.onOpen.pipe(new MyStreamConsumer(_onOpenController, _onOpenProcess));
     _socket.onMessage.pipe(new MyStreamConsumer(_onMessageController, _onMessageProcess));
     _socket.onError.pipe(new MyStreamConsumer(_onErrorController, _onErrorProcess));
@@ -89,7 +87,7 @@ class WebsocketTransport implements Transport {
 
   void _startHeartbeat() {
     _heart.startBeating();
-    _heart.deathMessageCallback = () => disconnect(1000, 'timeout');
+    _heart.deathMessageCallback = () => disconnect(1000, 'timeout', true);
     _heart.beatCallback = _ping;
   }
 
@@ -97,8 +95,8 @@ class WebsocketTransport implements Transport {
     send(data);
   }
 
-  bool _isPong(String response) {
-    JsonObject jsonResp = new JsonObject.fromJsonString(response);
+  bool _isPong(MessageEvent event) {
+    JsonObject jsonResp = new JsonObject.fromJsonString(event.data);
     if (jsonResp.containsKey('type')) {
       return (jsonResp['type'] == 'pong');
     }
@@ -112,10 +110,8 @@ class WebsocketTransport implements Transport {
     return event;
   }
 
-  int _onMessageProcess(MessageEvent event) {
-    _log.fine('Message received');
-
-    if (_isPong(event.data)) {
+  MessageEvent _onMessageProcess(MessageEvent event) {
+    if (_isPong(event)) {
       _heart.addResponse();
       return null;
     }

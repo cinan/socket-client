@@ -33,7 +33,10 @@ class TransportFinder {
     _timeout = new Duration(seconds: timeout);
   }
 
+  // TODO rename to transports whole class
   Future<TransportBuilder> findConnection() {
+    _log.info('searching for transports');
+
     _futureConnection = new Completer();
 
     for (Map tb in _availableConnectionsInfoSorted) {

@@ -40,7 +40,10 @@ class WebsocketTestingTransport extends WebsocketTransport {
       return super._onMessageProcess(event);
     } else {
       new Timer(_delayedResponse, () {
-        _onMessageController.add(event);
+        MessageEvent e = super._onMessageProcess(event);
+        if (e != null) {
+          _onMessageController.add(e);
+        }
       });
       return null;
     }

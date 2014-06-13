@@ -22,7 +22,7 @@ class Caller {
 
   HashMap<int, TransportBuilder> _availableConnections = new HashMap();
 
-  TransportFinder _transportFinder = new TransportFinder(timeout: 3);
+  TransportFinder _transportFinder;
 
   Logger _log = new Logger('Caller');
 
@@ -42,6 +42,7 @@ class Caller {
   void connect() {
     _forceDisconnect = false;
 
+    _transportFinder = new TransportFinder(timeout: 3);
     _transportFinder.transports = _availableConnections;
     _findConnection();
   }
@@ -54,7 +55,7 @@ class Caller {
 
   void disconnect() {
     if (connected) {
-      _transport.disconnect();
+      _transport.disconnect(1000, 'disconnect', true);
     }
 
     _transport = null;
@@ -81,8 +82,7 @@ class Caller {
     _transport.onClose.pipe(new MyStreamConsumer(_onCloseController, (CloseEvent event) {
       if (!_forceDisconnect) {
         _log.info('Disconnected, trying to reconnect');
-
-        _findConnection();
+        connect();
       }
 
       return event;

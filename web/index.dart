@@ -10,8 +10,8 @@ void main() {
   });
 
   ConnectionManager cm = new ConnectionManager();
-//  cm.registerConnection(0, () => new WebsocketTransport('ws://localhost:4040/ws'));
-  cm.registerConnection(0, () => new PollingTransport('http://localhost:4040/polling'));
+  cm.registerConnection(0, () => new WebsocketTransport('ws://localhost:4040/ws'));
+//  cm.registerConnection(0, () => new PollingTransport('http://localhost:4040/polling'));
 
   cm.connect();
 

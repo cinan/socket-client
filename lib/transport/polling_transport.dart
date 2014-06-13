@@ -17,6 +17,7 @@ class PollingTransport implements Transport {
   Future get supported {
     _log.info('Is Polling supported?');
     return _supported.then((Future res) {
+      _supportedCompleter = null;
       disconnect();
       return res;
     });
@@ -75,10 +76,10 @@ class PollingTransport implements Transport {
     _readyState = Transport.OPEN;
   }
 
-  void disconnect([int code, String reason]) {
+  void disconnect([int code, String reason, bool forceDisconnect = false]) {
     _heart.die();
 
-    if ((readyState == Transport.OPEN) || (readyState == Transport.CONNECTING)) {
+    if (forceDisconnect && ((readyState == Transport.OPEN) || (readyState == Transport.CONNECTING))) {
       // TODO: custom events, CloseEvent is reserved for Websocket usage only
       _onCloseController.add(new Event('close'));
     }
@@ -142,7 +143,7 @@ class PollingTransport implements Transport {
 
   void _startHeartbeat() {
     _heart.startBeating();
-    _heart.deathMessageCallback = () => disconnect(1000, 'timeout');
+    _heart.deathMessageCallback = () => disconnect(1000, 'timeout', true);
     _heart.beatCallback = _ping;
   }
 

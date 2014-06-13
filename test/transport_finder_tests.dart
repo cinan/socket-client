@@ -1,55 +1,63 @@
 part of client_tests;
 
 transportFinderTests() {
+  group('transport finder tests', () {
 
-  TransportFinder tf;
+    TransportFinder tf;
 
-  WebsocketTransport ws;
-  PollingTransport ps;
+    WebsocketTransport ws;
+    PollingTransport ps;
 
-  String wsUrl = 'ws://localhost:4040/ws';
-  String psUrl = 'http://localhost:4040/polling';
+    String wsUrl = 'ws://localhost:4040/ws';
+    String psUrl = 'http://localhost:4040/polling';
 
-  setUp(() {
-    tf = new TransportFinder();
+    setUp(() {
+      tf = new TransportFinder();
 
-    ws = new WebsocketTransport(wsUrl);
-    ps = new PollingTransport(psUrl);
-  });
+      ws = new WebsocketTransport(wsUrl);
+      ps = new PollingTransport(psUrl);
+    });
 
-  test('transports are sorted by priority into iterable', () {
-    Map transports = {0: ws, 10: ps };
-    tf.transports = transports;
+    test('transports are sorted by priority into iterable', () {
+      Map transports = {0: ws, 10: ps };
+      tf.transports = transports;
 
-    expect(tf.sortedTransports.length, equals(2));
-    expect(tf.sortedTransports.first['conn'], equals(ws));
-    expect(tf.sortedTransports.first['isSupported'], isNull);
-    expect(tf.sortedTransports.last['conn'], equals(ps));
-    expect(tf.sortedTransports.last['isSupported'], isNull);
-  });
+      expect(tf.sortedTransports.length, equals(2));
+      expect(tf.sortedTransports.first['conn'], equals(ws));
+      expect(tf.sortedTransports.first['isSupported'], isNull);
+      expect(tf.sortedTransports.last['conn'], equals(ps));
+      expect(tf.sortedTransports.last['isSupported'], isNull);
+    });
 
-  test('find connection if transports are all right', () {
-    Map transports = {0: () => ps, 10: () => ws };
-    tf.transports = transports;
+    test('find connection if transports are all right', () {
+      Map transports = {0: () => ps, 10: () => ws };
+      tf.transports = transports;
 
-    Future<TransportBuilder> fc = tf.findConnection();
+      Future<TransportBuilder> fc = tf.findConnection();
 
-    retryAsync(() => fc.then((TransportBuilder t) {
-      expect(t().humanType, equals('polling'));
-    }));
-  });
+      retryAsync(() => fc.then((TransportBuilder t) {
+        expect(t().humanType, equals('polling'));
 
-  test('find connection with unreachable most preferred transport', () {
-    WebsocketTestingTransport ws = new WebsocketTestingTransport(psUrl);
-    ws.supported = false;
+        disconnect(ps);
+        disconnect(ws);
+      }));
+    });
 
-    Map transports = {0: () => ws, 10: () => ps };
-    tf.transports = transports;
+    test('find connection with unreachable most preferred transport', () {
+      WebsocketTestingTransport ws = new WebsocketTestingTransport(psUrl);
+      ws.supported = false;
 
-    Future<TransportBuilder> fc = tf.findConnection();
+      Map transports = {0: () => ws, 10: () => ps };
+      tf.transports = transports;
 
-    retryAsync(() => fc.then((TransportBuilder t) {
-      expect(t().humanType, equals('polling'));
-    }));
+      Future<TransportBuilder> fc = tf.findConnection();
+
+      retryAsync(() => fc.then((TransportBuilder t) {
+        expect(t().humanType, equals('polling'));
+
+        disconnect(ps);
+        disconnect(ws);
+      }));
+    });
   });
 }

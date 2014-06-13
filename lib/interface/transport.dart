@@ -21,7 +21,7 @@ abstract class Transport {
   Transport(String host, [settings]);
 
   void connect();
-  void disconnect([int code, String reason]);
+  void disconnect([int code, String reason, bool forceDisconnect]);
 
   void send(String data);
 }
