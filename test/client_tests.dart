@@ -13,6 +13,8 @@ import 'package:logging/logging.dart';
 import '../lib/connection_manager.dart';
 
 part 'async_helper.dart';
+
+part 'transport_finder_tests.dart';
 part 'connection_manager_tests.dart';
 part 'polling_transport_tests.dart';
 part 'websocket_transport_tests.dart';
@@ -21,6 +23,7 @@ part 'heartbeat_tests.dart';
 main() {
   useHtmlConfiguration();
 
+  transportFinderTests();
   connectionManagerTests();
   pollingTransportTests();
   websocketTransportTests();

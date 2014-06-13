@@ -7,7 +7,7 @@ class PollingTransport implements Transport {
   String _url;
   var _settings;
 
-  Heart _heart = new Heart(new Duration(seconds: 10));
+  Heart _heart = new Heart(new Duration(seconds: 10), 'PT');
 
   bool _isPending = false;
   Queue<String> _messageQueue = new Queue<String>();
@@ -15,7 +15,9 @@ class PollingTransport implements Transport {
   Completer _supportedCompleter;
 
   Future get supported {
+    _log.info('Is Polling supported?');
     return _supported.then((Future res) {
+      disconnect();
       return res;
     });
   }
@@ -31,8 +33,9 @@ class PollingTransport implements Transport {
 
     _heart.beatCallback = _ping;
     _heart.responseCallback = (_) {
-      _supportedCompleter.complete(true);
       _readyState = Transport.OPEN;
+      _heart.die();
+      _supportedCompleter.complete(true);
     };
 
     _heart.startBeating();
@@ -74,12 +77,13 @@ class PollingTransport implements Transport {
 
   void disconnect([int code, String reason]) {
     _heart.die();
-    if ((readyState == Transport.OPEN) || (readyState == Transport.CONNECTING)) {
-      _readyState = Transport.CLOSED;
 
+    if ((readyState == Transport.OPEN) || (readyState == Transport.CONNECTING)) {
       // TODO: custom events, CloseEvent is reserved for Websocket usage only
       _onCloseController.add(new Event('close'));
     }
+
+    _readyState = Transport.CLOSED;
   }
 
   void send(String data) {
@@ -143,6 +147,7 @@ class PollingTransport implements Transport {
   }
 
   void _ping(String data) {
+    _log.info('Sending ping');
     _makeRequest(data, true);
   }
 

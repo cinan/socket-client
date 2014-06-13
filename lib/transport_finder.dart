@@ -13,16 +13,19 @@ class TransportFinder {
 
   Logger _log = new Logger('TransportFinder');
 
-  set connections(HashMap<int, TransportBuilder> connections) {
+  set transports(HashMap<int, TransportBuilder> connections) {
     List<int> sortedMapKeys = connections.keys.toList()..sort();
     _availableConnectionsInfoSorted = new List();
 
     for (int key in sortedMapKeys) {
       _availableConnectionsInfoSorted.add({
-          'conn': connections[key]
+          'conn': connections[key],
+          'isSupported': null
       });
     }
   }
+
+  List<TransportBuilder> get sortedTransports => _availableConnectionsInfoSorted;
 
   bool get alreadyFound => (_futureConnection == null) ? false : _futureConnection.isCompleted;
 
@@ -30,14 +33,14 @@ class TransportFinder {
     _timeout = new Duration(seconds: timeout);
   }
 
-  Future findConnection() {
+  Future<TransportBuilder> findConnection() {
     _futureConnection = new Completer();
 
     for (Map tb in _availableConnectionsInfoSorted) {
       tb['isSupported'] = null;
     }
 
-    _fireConnectionsInParallel();
+    _askAllIfSupported();
 
     _listenToConnectionsResponses();
     _waitUntilSupportedConnectionIsFound();
@@ -45,16 +48,16 @@ class TransportFinder {
     return _futureConnection.future;
   }
 
-  void _fireConnectionsInParallel() {
-    _connectionsStreamController = new StreamController.broadcast();
+  void _askAllIfSupported() {
+    _connectionsStreamController = new StreamController();
+    List<Future> isSupportedResponses = new List<Future>();
 
     for (Map connInfo in _availableConnectionsInfoSorted) {
       Future isSupportedResponse = connInfo['conn']().supported;
       isSupportedResponse.then((bool supported) {
-        if (_connectionsStreamController.isClosed) {
-          return;
-        } else {
-          connInfo['isSupported'] = supported;
+        connInfo['isSupported'] = supported;
+
+        if (!_connectionsStreamController.isClosed) {
           _connectionsStreamController.add(connInfo);
         }
       });

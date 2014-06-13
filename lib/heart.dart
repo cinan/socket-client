@@ -31,11 +31,18 @@ class Heart {
     _responseCallback = callback;
   }
 
-  Heart(Duration this._interval);
+  String n = '';
+
+  Heart(Duration this._interval, [this.n = '']);
 
   void startBeating() {
     if (isBeating)
       return;
+
+    _log.finest('${n} start heartbeat');
+
+    // Ping must be send right now, Timer.periodic calls callback after _interval pass
+    _beat();
 
     _timer = new Timer.periodic(_interval, (_) {
       if (_isAlive()) {
@@ -55,14 +62,14 @@ class Heart {
     if (_sendBeatCallback != null)
       _sendBeatCallback(pingData);
 
-    _log.finest('sent beat');
+    _log.finest('${n} sent beat');
   }
 
   void die() {
-    _log.finest('heartbeat stopped');
-
-    if (_timer != null)
+    if ((_timer != null) && (_timer.isActive)) {
+      _log.finest('${n} heartbeat stopped');
       _timer.cancel();
+    }
   }
 
   void addResponse() {

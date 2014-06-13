@@ -10,7 +10,11 @@ class WebsocketTestingTransport extends WebsocketTransport {
 
   Duration _delayedResponse;
 
-  Future get supported => new Future.value(_supported);
+  Future get supported {
+    _log.info('Is Websocket supported?');
+    return new Future.value(_supported);
+  }
+
   void set supported(isSupported) {
     _supported = isSupported;
   }

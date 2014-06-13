@@ -10,18 +10,18 @@ class WebsocketTransport implements Transport {
   String _url;
   var _settings;
 
-  Heart _heart = new Heart(new Duration(seconds: 10));
+  Heart _heart = new Heart(new Duration(seconds: 10), 'WS');
 
   Future get supported {
-    return _supported.then((res){
+    _log.info('Is Websocket supported?');
+    return _supported.then((res) {
       _supportedCompleter = null;
+      disconnect();
       return res;
     });
   }
 
   Future get _supported {
-    _log.info('Checking if websocket is supported');
-
     if (_supportedCompleter != null) {
       return _supportedCompleter.future;
     }
@@ -32,12 +32,8 @@ class WebsocketTransport implements Transport {
     connect();
 
     onOpen.listen((Event e) {
-      _log.info('Websocket transport is supported');
-      disconnect();
       _supportedCompleter.complete(true);
     }, onError: (err) {
-      _log.info('Websocket transport is NOT supported');
-      disconnect();
       _supportedCompleter.complete(false);
     }, cancelOnError: true);
 

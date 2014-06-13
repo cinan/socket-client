@@ -42,7 +42,7 @@ class Caller {
   void connect() {
     _forceDisconnect = false;
 
-    _transportFinder.connections = _availableConnections;
+    _transportFinder.transports = _availableConnections;
     _findConnection();
   }
 
