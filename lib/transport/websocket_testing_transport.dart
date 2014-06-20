@@ -2,7 +2,7 @@ part of connection_manager;
 
 class WebsocketTestingTransport extends WebsocketTransport {
 
-  Logger _log = new Logger('WeboscketTestingTransport');
+  Logger _log = new Logger('WebosocketTestingTransport');
 
   bool _forceDisconnected = false;
   bool _initOnCreate      = true;
@@ -35,12 +35,12 @@ class WebsocketTestingTransport extends WebsocketTransport {
     _delayedResponse = responseTime;
   }
 
-  MessageEvent _onMessageProcess(MessageEvent event) {
+  Html.MessageEvent _onMessageProcess(Html.MessageEvent event) {
     if (_delayedResponse == null) {
       return super._onMessageProcess(event);
     } else {
       new Timer(_delayedResponse, () {
-        MessageEvent e = super._onMessageProcess(event);
+        Html.MessageEvent e = super._onMessageProcess(event);
         if (e != null) {
           _onMessageController.add(e);
         }

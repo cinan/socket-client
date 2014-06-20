@@ -9,17 +9,17 @@ class Messager {
   // Mam zarucene, ze iterujem v takom poradi, ako boli elementy vlozene
   LinkedHashMap<dynamic, String> _messageBuffer = new LinkedHashMap<dynamic, String>();
 
-  StreamController<Event>         _onOpenController     = new StreamController<Event>();
-  Stream<Event>                   get onOpen            => _onOpenController.stream;
+  StreamController<OpenEvent>    _onOpenController     = new StreamController<OpenEvent>();
+  Stream<OpenEvent>              get onOpen            => _onOpenController.stream;
 
-  StreamController<MessageEvent>  _onMessageController  = new StreamController<MessageEvent>();
-  Stream<MessageEvent>            get onMessage         => _onMessageController.stream;
+  StreamController<MessageEvent> _onMessageController  = new StreamController<MessageEvent>();
+  Stream<MessageEvent>           get onMessage         => _onMessageController.stream;
 
-  StreamController<Event>         _onErrorController    = new StreamController<Event>();
-  Stream<Event>                   get onError           => _onErrorController.stream;
+  StreamController<ErrorEvent>   _onErrorController    = new StreamController<ErrorEvent>();
+  Stream<ErrorEvent>             get onError           => _onErrorController.stream;
 
-  StreamController<CloseEvent>    _onCloseController    = new StreamController<CloseEvent>();
-  Stream<CloseEvent>              get onClose           => _onCloseController.stream;
+  StreamController<CloseEvent>   _onCloseController    = new StreamController<CloseEvent>();
+  Stream<CloseEvent>             get onClose           => _onCloseController.stream;
 
   Caller _caller = new Caller();
   int _nextSendId = 0;
@@ -89,7 +89,7 @@ class Messager {
     _caller.onClose.pipe(new MyStreamConsumer(_onCloseController, _onCloseProcess));
   }
 
-  Event _onOpenProcess(Event event) {
+  OpenEvent _onOpenProcess(OpenEvent event) {
     _log.info('som (znova) pripojeny, odosielam neodoslane spravy');
     _sendMessageBuffer();
 
@@ -100,7 +100,7 @@ class Messager {
     return _decodeIncomingEventMessage(event);
   }
 
-  Event _onErrorProcess(Event event) => event;
+  ErrorEvent _onErrorProcess(ErrorEvent event) => event;
   CloseEvent _onCloseProcess(CloseEvent event) => event;
 
   void _sendMessageBuffer() {
@@ -120,14 +120,7 @@ class Messager {
 
       // ak ide o potvrdenie spravy, tak to je sprava iba pre mna a moje Futures
       if (decodedMessage.containsKey('body')) {
-        MessageEvent modifiedEvent = new MessageEvent(
-            event.type,
-            cancelable: false,
-            data: decodedMessage['body'],
-            origin: event.origin,
-            lastEventId: '');
-
-        return modifiedEvent;
+        return new MessageEvent.fromExisting(event, preserveTimestamp: true);
       } else {
         throw new FormatException();
       }

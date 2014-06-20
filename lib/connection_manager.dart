@@ -1,6 +1,7 @@
 library connection_manager;
 
-import 'dart:html';
+import 'dart:html' hide Event, MessageEvent, CloseEvent, ErrorEvent;
+import 'dart:html' as Html show Event, MessageEvent, CloseEvent, ErrorEvent;
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
@@ -12,6 +13,12 @@ part 'interface/transport.dart';
 
 part 'wrapper/messager.dart';
 part 'wrapper/caller.dart';
+
+part 'stream_event/event.dart';
+part 'stream_event/open_event.dart';
+part 'stream_event/message_event.dart';
+part 'stream_event/error_event.dart';
+part 'stream_event/close_event.dart';
 
 part 'heart.dart';
 part 'my_stream_consumer.dart';
@@ -37,13 +44,10 @@ class ConnectionManager {
 
   bool get connected => _messager.connected;
 
-  Stream<dynamic> get onError => _messager.onError;
-
-  Stream<dynamic> get onOpen => _messager.onOpen;
-
-  Stream<dynamic> get onMessage => _messager.onMessage;
-
-  Stream<dynamic> get onClose => _messager.onClose;
+  Stream<OpenEvent>     get onOpen    => _messager.onOpen;
+  Stream<MessageEvent>  get onMessage => _messager.onMessage;
+  Stream<ErrorEvent>    get onError   => _messager.onError;
+  Stream<CloseEvent>    get onClose   => _messager.onClose;
 
   void registerConnection(int priority, TransportBuilder connection) {
     _messager.registerConnection(priority, connection);

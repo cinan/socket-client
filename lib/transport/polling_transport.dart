@@ -50,17 +50,17 @@ class PollingTransport implements Transport {
   String get url        => _url;
   String get humanType  => 'polling';
 
-  StreamController<Event> _onOpenController = new StreamController();
-  Stream<Event>         get onOpen          => _onOpenController.stream;
+  StreamController<OpenEvent>    _onOpenController     = new StreamController<OpenEvent>();
+  Stream<OpenEvent>              get onOpen            => _onOpenController.stream;
 
-  StreamController<MessageEvent> _onMessageController = new StreamController();
-  Stream<MessageEvent>  get onMessage                 => _onMessageController.stream;
+  StreamController<MessageEvent> _onMessageController  = new StreamController<MessageEvent>();
+  Stream<MessageEvent>           get onMessage         => _onMessageController.stream;
 
-  StreamController<Event> _onErrorController  = new StreamController();
-  Stream<Event>         get onError           => _onErrorController.stream;
+  StreamController<ErrorEvent>   _onErrorController    = new StreamController<ErrorEvent>();
+  Stream<ErrorEvent>             get onError           => _onErrorController.stream;
 
-  StreamController<Event> _onCloseController  = new StreamController();
-  Stream<Event>         get onClose           => _onCloseController.stream;
+  StreamController<CloseEvent>   _onCloseController    = new StreamController<CloseEvent>();
+  Stream<CloseEvent>             get onClose           => _onCloseController.stream;
 
   PollingTransport(String this._url, [this._settings]);
 
@@ -71,7 +71,7 @@ class PollingTransport implements Transport {
     _startHeartbeat();
 
     // so Caller knows I'm up
-    _onOpenController.add(new Event('open'));
+    _onOpenController.add(new OpenEvent());
 
     _readyState = Transport.OPEN;
   }
@@ -80,8 +80,7 @@ class PollingTransport implements Transport {
     _heart.die();
 
     if (forceDisconnect && ((readyState == Transport.OPEN) || (readyState == Transport.CONNECTING))) {
-      // TODO: custom events, CloseEvent is reserved for Websocket usage only
-      _onCloseController.add(new Event('close'));
+      _onCloseController.add(new CloseEvent(code, reason));
     }
 
     _readyState = Transport.CLOSED;
@@ -118,7 +117,7 @@ class PollingTransport implements Transport {
   }
 
   void _handleRequestResponse(HttpRequest resp) {
-    MessageEvent e = _Transformer.responseToMessageEvent(resp, _url);
+    MessageEvent e = new MessageEvent(resp.responseText, _url);
 
     if (_isPong(resp)) {
       _heart.addResponse();
@@ -163,12 +162,4 @@ class PollingTransport implements Transport {
     }
     return false;
   }
-}
-
-class _Transformer {
-
-  static responseToMessageEvent(HttpRequest response, String origin) {
-    return new MessageEvent('message', cancelable: false, data: response.responseText, origin: origin, lastEventId: '');
-  }
-
 }

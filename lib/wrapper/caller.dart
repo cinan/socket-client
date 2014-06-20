@@ -2,17 +2,18 @@ part of connection_manager;
 
 class Caller {
 
-  StreamController _onOpenController = new StreamController.broadcast();
-  Stream<Event> get onOpen => _onOpenController.stream;
+  // TODO remove broadcasts
+  StreamController<OpenEvent>     _onOpenController     = new StreamController<OpenEvent>.broadcast();
+  Stream<OpenEvent>               get onOpen            => _onOpenController.stream;
 
-  StreamController _onMessageController = new StreamController.broadcast();
-  Stream<MessageEvent> get onMessage => _onMessageController.stream;
+  StreamController<MessageEvent>  _onMessageController  = new StreamController<MessageEvent>.broadcast();
+  Stream<MessageEvent>            get onMessage         => _onMessageController.stream;
 
-  StreamController _onErrorController = new StreamController.broadcast();
-  Stream<Event> get onError => _onErrorController.stream;
+  StreamController<ErrorEvent>    _onErrorController    = new StreamController<ErrorEvent>.broadcast();
+  Stream<ErrorEvent>              get onError           => _onErrorController.stream;
 
-  StreamController _onCloseController = new StreamController.broadcast();
-  Stream<CloseEvent> get onClose => _onCloseController.stream;
+  StreamController<CloseEvent>    _onCloseController    = new StreamController<CloseEvent>.broadcast();
+  Stream<CloseEvent>              get onClose           => _onCloseController.stream;
 
   Transport _transport;
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:html';
-import 'package:client/connection_manager.dart';
+import 'package:client/connection_manager.dart' hide MessageEvent, OpenEvent, CloseEvent, ErrorEvent;
+import 'package:client/connection_manager.dart' as CM show MessageEvent, OpenEvent, CloseEvent, ErrorEvent;
 import 'package:logging/logging.dart';
 
 void main() {
@@ -15,12 +16,13 @@ void main() {
 
   cm.connect();
 
-  cm.onOpen.listen((Event e) {
-    print('Im opened');
+  cm.onOpen.listen((CM.OpenEvent e) {
+    print('I\'m opened');
   });
 
-  cm.onMessage.listen((MessageEvent e) {
-//    print('Prisla mi sprava: ' + e.data);
+  cm.onMessage.listen((CM.MessageEvent e) {
+    print('Message received:');
+    print(e.data);
   });
 
   cm.onClose.listen((e) {

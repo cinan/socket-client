@@ -45,17 +45,17 @@ class WebsocketTransport implements Transport {
   String get url        => _url;
   String get humanType  => 'websocket';
 
-  StreamController<Event>         _onOpenController     = new StreamController<Event>();
-  Stream<Event>                   get onOpen            => _onOpenController.stream;
+  StreamController<OpenEvent>    _onOpenController     = new StreamController<OpenEvent>();
+  Stream<OpenEvent>              get onOpen            => _onOpenController.stream;
 
-  StreamController<MessageEvent>  _onMessageController  = new StreamController<MessageEvent>();
-  Stream<MessageEvent>            get onMessage         => _onMessageController.stream;
+  StreamController<MessageEvent> _onMessageController  = new StreamController<MessageEvent>();
+  Stream<MessageEvent>           get onMessage         => _onMessageController.stream;
 
-  StreamController<Event>         _onErrorController    = new StreamController<Event>();
-  Stream<Event>                   get onError           => _onErrorController.stream;
+  StreamController<ErrorEvent>   _onErrorController    = new StreamController<ErrorEvent>();
+  Stream<ErrorEvent>             get onError           => _onErrorController.stream;
 
-  StreamController<CloseEvent>    _onCloseController    = new StreamController<CloseEvent>();
-  Stream<CloseEvent>              get onClose           => _onCloseController.stream;
+  StreamController<CloseEvent>   _onCloseController    = new StreamController<CloseEvent>();
+  Stream<CloseEvent>             get onClose           => _onCloseController.stream;
 
   WebsocketTransport(String this._url, [this._settings]);
 
@@ -103,28 +103,30 @@ class WebsocketTransport implements Transport {
     return false;
   }
 
-  Event _onOpenProcess(Event event) {
+  OpenEvent _onOpenProcess(Event event) {
     _log.fine('Im opened');
 
     _startHeartbeat();
-    return event;
+    return new OpenEvent.fromExistingHtmlEvent(event);
   }
 
-  MessageEvent _onMessageProcess(MessageEvent event) {
-    if (_isPong(event)) {
+  MessageEvent _onMessageProcess(Html.MessageEvent event) {
+    MessageEvent transformedEvent = new MessageEvent.fromExistingHtmlEvent(event);
+
+    if (_isPong(transformedEvent)) {
       _heart.addResponse();
       return null;
     }
 
     _log.fine('Message received');
-    return event;
+    return transformedEvent;
   }
 
-  Event _onErrorProcess(Event event) => event;
+  ErrorEvent _onErrorProcess(Html.Event event) => new ErrorEvent.fromExistingHtmlEvent(event);
 
-  CloseEvent _onCloseProcess(CloseEvent event) {
+  CloseEvent _onCloseProcess(Html.CloseEvent event) {
     disconnect();
-    return event;
+    return new CloseEvent.fromExistingHtmlEvent(event);
   }
 
 }

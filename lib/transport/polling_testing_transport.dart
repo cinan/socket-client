@@ -18,7 +18,7 @@ class PollingTestingTransport extends PollingTransport {
     _delayedResponse = responseTime;
   }
 
-  void _handleRequestResponse(HttpRequest resp) {
+  void _handleRequestResponse(Html.HttpRequest resp) {
     if (_delayedResponse == null) {
       super._handleRequestResponse(resp);
     } else {

@@ -1,7 +1,8 @@
 library client_tests;
 
+import 'dart:html' hide Event, MessageEvent, CloseEvent, ErrorEvent;
+import 'dart:html' as Html show Event, MessageEvent, CloseEvent, ErrorEvent;
 import 'dart:async';
-import 'dart:html';
 
 import 'package:unittest/unittest.dart';
 import 'package:unittest/html_enhanced_config.dart';
@@ -19,6 +20,7 @@ part 'connection_manager_tests.dart';
 part 'polling_transport_tests.dart';
 part 'websocket_transport_tests.dart';
 part 'heartbeat_tests.dart';
+part 'stream_event_objects_tests.dart';
 
 main() {
   bool verboseConsole = false;
@@ -37,6 +39,7 @@ main() {
   pollingTransportTests();
   websocketTransportTests();
   heartbeatTests();
+  streamEventObjectsTests();
 }
 
 disconnect(Transport t) {
