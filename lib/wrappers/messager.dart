@@ -6,7 +6,7 @@ class Messager extends Object with EventControllersAndStreams {
 
   String get transportName => _caller.transportName;
 
-  LinkedHashMap<dynamic, String> _messageBuffer = new LinkedHashMap<dynamic, String>();
+  LinkedHashMap<int, Message> _messageBuffer = new LinkedHashMap<int, Message>();
 
   Caller _caller = new Caller();
   int _nextSendId = 0;
@@ -28,16 +28,14 @@ class Messager extends Object with EventControllersAndStreams {
   Future send(data) {
     _nextSendId++;
 
-    String message = new JsonObject.fromMap({
-        'id': _nextSendId,
-        'body': data
-    }).toString();
+    DataMessage message = new DataMessage(_nextSendId);
+    message.body = data;
 
     _log.info('adding to the buffer: $message');
     _messageBuffer[_nextSendId] = message;
     _completers[_nextSendId] = new Completer();
 
-    _caller.send(message);
+    _caller.send(message.toString());
     return _completers[_nextSendId].future;
   }
 
@@ -84,25 +82,25 @@ class Messager extends Object with EventControllersAndStreams {
   }
 
   MessageEvent _onMessageProcess(MessageEvent event) {
-    return _decodeIncomingEventMessage(event);
+    return _decodeMessageEvent(event);
   }
 
   ErrorEvent _onErrorProcess(ErrorEvent event) => event;
   CloseEvent _onCloseProcess(CloseEvent event) => event;
 
   void _sendMessageBuffer() {
-    for (String msg in _messageBuffer.values) {
-      _caller.send(msg);
+    for (Message msg in _messageBuffer.values) {
+      _caller.send(msg.toString());
     }
   }
 
-  MessageEvent _decodeIncomingEventMessage(MessageEvent event) {
+  MessageEvent _decodeMessageEvent(MessageEvent event) {
     try {
       JsonObject decodedMessage = new JsonObject.fromJsonString(event.data);
 
-      if (_isConfirmation(decodedMessage)) {
+      if (ConfirmationMessage.matches(decodedMessage)) {
         _finalizeMessage(decodedMessage);
-        return event;
+        return null;
       }
 
       // ak ide o potvrdenie spravy, tak to je sprava iba pre mna a moje Futures

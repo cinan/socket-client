@@ -35,7 +35,7 @@ class Caller extends Object with EventControllersAndStreams {
     _findConnection();
   }
 
-  void send(data) {
+  void send(String data) {
     if (connected) {
       _transport.send(data);
     }

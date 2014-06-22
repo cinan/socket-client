@@ -145,9 +145,6 @@ class PollingTransport extends Object with EventControllersAndStreams implements
 
   bool _isPong(HttpRequest response) {
     JsonObject jsonResp = new JsonObject.fromJsonString(response.responseText);
-    if (jsonResp.containsKey('type')) {
-      return (jsonResp['type'] == 'pong');
-    }
-    return false;
+    return PongMessage.matches(jsonResp);
   }
 }

@@ -33,6 +33,7 @@ class Heart {
 
   String n = '';
 
+  // TODO: remove after debug the 'n' param
   Heart(Duration this._interval, [this.n = '']);
 
   void startBeating() {
@@ -55,12 +56,9 @@ class Heart {
   }
 
   void _beat() {
-    String pingData = new JsonObject.fromMap({
-        'type': 'ping'
-    }).toString();
-
-    if (_sendBeatCallback != null)
-      _sendBeatCallback(pingData);
+    if (_sendBeatCallback != null) {
+      _sendBeatCallback(new PingMessage().toString());
+    }
 
     _log.finest('${n} sent beat');
   }

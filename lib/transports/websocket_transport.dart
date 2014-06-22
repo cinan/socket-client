@@ -97,10 +97,7 @@ class WebsocketTransport implements Transport {
 
   bool _isPong(MessageEvent event) {
     JsonObject jsonResp = new JsonObject.fromJsonString(event.data);
-    if (jsonResp.containsKey('type')) {
-      return (jsonResp['type'] == 'pong');
-    }
-    return false;
+    return PongMessage.matches(jsonResp);
   }
 
   OpenEvent _onOpenProcess(Event event) {
