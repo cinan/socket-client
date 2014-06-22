@@ -2,15 +2,16 @@ part of connection_manager;
 
 class Messager extends Object with EventControllersAndStreams {
 
-  bool get connected => _caller.connected;
+  bool get connected        => _caller.connected;
 
-  String get transportName => _caller.transportName;
+  String get transportName  => _caller.transportName;
 
-  LinkedHashMap<int, Message> _messageBuffer = new LinkedHashMap<int, Message>();
+  LinkedHashMap<int, Message> _messageBuffer    = new LinkedHashMap<int, Message>();
+  MessageContainer            _messageContainer = new MessageContainer();
+  Map<int, Completer>         _completers       = new Map<dynamic, Completer>();
 
   Caller _caller = new Caller();
   int _nextSendId = 0;
-  Map<dynamic, Completer> _completers = new Map<dynamic, Completer>();
 
   Logger _log = new Logger('Messager');
 
@@ -25,17 +26,30 @@ class Messager extends Object with EventControllersAndStreams {
     _setupListeners();
   }
 
+  // TODO: Future type
   Future send(data) {
     _nextSendId++;
 
     DataMessage message = new DataMessage(_nextSendId);
     message.body = data;
 
-    _log.info('adding to the buffer: $message');
+    _log.info('adding to the message queue: $message');
     _messageBuffer[_nextSendId] = message;
     _completers[_nextSendId] = new Completer();
 
-    _caller.send(message.toString());
+    _messageContainer.add(message);
+
+    new Future.delayed(Duration.ZERO, () {
+      if (_messageContainer.isEmpty)
+        return;
+
+      _messageContainer.length > 1
+        ? _caller.send(_messageContainer.wrapped.toString())
+        : _caller.send(_messageContainer.first.toString());
+
+      _messageContainer.clear();
+    });
+
     return _completers[_nextSendId].future;
   }
 

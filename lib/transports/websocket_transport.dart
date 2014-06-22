@@ -74,7 +74,6 @@ class WebsocketTransport implements Transport {
 
   void send(String data) {
     if (_socket != null) {
-      print('send');
       _socket.send(data);
     }
   }

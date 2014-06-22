@@ -61,6 +61,26 @@ connectionManagerTests() {
       });
     });
 
+    test('send many messages in one event loop', () {
+      Mock tSpy = new Mock.spy(t);
+
+      bool hasRun = false;
+
+      cm.registerConnection(0, () => tSpy);
+      cm.connect();
+
+      cm.onOpen.listen((_) {
+        for (int i in [1,2,3,4,5]) {
+          cm.send(i);
+        }
+
+        retryAsync(() => tSpy.getLogs(callsTo('send')).verify(happenedOnce));
+        hasRun = true;
+      });
+
+      retryAsync(() => expect(hasRun, isTrue));
+    });
+
 //    test('sending message when connected', () {
 //      cm.connect();
 //
