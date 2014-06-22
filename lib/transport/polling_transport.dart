@@ -1,6 +1,6 @@
 part of connection_manager;
 
-class PollingTransport implements Transport {
+class PollingTransport extends Object with EventControllersAndStreams implements Transport {
 
   Logger _log = new Logger('PollingTransport');
 
@@ -49,18 +49,6 @@ class PollingTransport implements Transport {
   int get readyState    => _readyState;
   String get url        => _url;
   String get humanType  => 'polling';
-
-  StreamController<OpenEvent>    _onOpenController     = new StreamController<OpenEvent>();
-  Stream<OpenEvent>              get onOpen            => _onOpenController.stream;
-
-  StreamController<MessageEvent> _onMessageController  = new StreamController<MessageEvent>();
-  Stream<MessageEvent>           get onMessage         => _onMessageController.stream;
-
-  StreamController<ErrorEvent>   _onErrorController    = new StreamController<ErrorEvent>();
-  Stream<ErrorEvent>             get onError           => _onErrorController.stream;
-
-  StreamController<CloseEvent>   _onCloseController    = new StreamController<CloseEvent>();
-  Stream<CloseEvent>             get onClose           => _onCloseController.stream;
 
   PollingTransport(String this._url, [this._settings]);
 

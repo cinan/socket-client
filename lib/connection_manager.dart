@@ -23,6 +23,8 @@ part 'stream_event/close_event.dart';
 part 'heart.dart';
 part 'my_stream_consumer.dart';
 
+part 'mixin/event_controllers_and_streams.dart';
+
 part 'transport_finder.dart';
 part 'transport/websocket_transport.dart';
 part 'transport/polling_transport.dart';
