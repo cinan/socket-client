@@ -61,7 +61,7 @@ class ConnectionManager {
     _messager.connect();
   }
 
-  Future send(data) {
+  Future<int> send(data) {
     return _messager.send(data);
   }
 

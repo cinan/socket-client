@@ -7,15 +7,15 @@ abstract class Transport {
   static const int CONNECTING = 0;
   static const int OPEN = 1;
 
-  bool get supported;
+  Future<bool> get supported;
 
   int get readyState;
   String get url;
   String get humanType;
 
-  Stream<Event> get onOpen;
+  Stream<OpenEvent> get onOpen;
   Stream<MessageEvent> get onMessage;
-  Stream<Event> get onError;
+  Stream<ErrorEvent> get onError;
   Stream<CloseEvent> get onClose;
 
   Transport(String host, [settings]);

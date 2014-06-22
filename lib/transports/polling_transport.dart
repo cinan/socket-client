@@ -14,7 +14,7 @@ class PollingTransport extends Object with EventControllersAndStreams implements
 
   Completer _supportedCompleter;
 
-  Future get supported {
+  Future<bool> get supported {
     _log.info('Is Polling supported?');
     return _supported.then((Future res) {
       _supportedCompleter = null;
@@ -23,7 +23,7 @@ class PollingTransport extends Object with EventControllersAndStreams implements
     });
   }
 
-  Future get _supported {
+  Future<bool> get _supported {
     if (_supportedCompleter != null) {
       return _supportedCompleter.future;
     }
