@@ -9,6 +9,8 @@ import 'dart:convert';
 import 'package:logging/logging.dart';
 import 'package:json_object/json_object.dart';
 
+import 'package:messages/messages.dart';
+
 part 'interfaces/transport.dart';
 
 part 'wrappers/messager.dart';
@@ -19,12 +21,6 @@ part 'stream_events/open_event.dart';
 part 'stream_events/message_event.dart';
 part 'stream_events/error_event.dart';
 part 'stream_events/close_event.dart';
-
-part 'messages/message.dart';
-part 'messages/data_message.dart';
-part 'messages/confirmation_message.dart';
-part 'messages/ping_message.dart';
-part 'messages/pong_message.dart';
 
 part 'heart.dart';
 part 'my_stream_consumer.dart';

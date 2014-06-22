@@ -4,6 +4,8 @@ dependencies:
   browser: any
   logging: ">=0.9.1+1 <0.10.0"
   json_object: any
+  messages:
+    path: ../messages/
 
 dev_dependencies:
   unittest: ">=0.11.0 <0.12.0"
