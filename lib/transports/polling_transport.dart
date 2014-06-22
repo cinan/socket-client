@@ -7,7 +7,7 @@ class PollingTransport extends Object with EventControllersAndStreams implements
   String _url;
   var _settings;
 
-  Heart _heart = new Heart(new Duration(seconds: 10), 'PT');
+  Heart _heart = new Heart(new Duration(seconds: 10));
 
   bool _isPending = false;
   Queue<String> _messageQueue = new Queue<String>();
@@ -84,6 +84,7 @@ class PollingTransport extends Object with EventControllersAndStreams implements
   }
 
   void _sendNextFromQueue() {
+    // TODO: if many messages, wrap them into one
     if (_messageQueue.isNotEmpty) {
       String message = _messageQueue.removeFirst();
       _makeRequest(message);

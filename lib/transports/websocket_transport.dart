@@ -10,7 +10,7 @@ class WebsocketTransport implements Transport {
   String _url;
   var _settings;
 
-  Heart _heart = new Heart(new Duration(seconds: 10), 'WS');
+  Heart _heart = new Heart(new Duration(seconds: 10));
 
   Future get supported {
     _log.info('Is Websocket supported?');
