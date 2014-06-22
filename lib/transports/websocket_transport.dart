@@ -1,6 +1,6 @@
 part of connection_manager;
 
-class WebsocketTransport implements Transport {
+class WebsocketTransport extends Object with EventControllersAndStreams implements Transport {
 
   WebSocket _socket;
   Logger _log = new Logger('WebsocketTransport');
@@ -12,7 +12,7 @@ class WebsocketTransport implements Transport {
 
   Heart _heart = new Heart(new Duration(seconds: 10));
 
-  Future get supported {
+  Future<bool> get supported {
     _log.info('Is Websocket supported?');
     return _supported.then((res) {
       _supportedCompleter = null;
@@ -21,7 +21,7 @@ class WebsocketTransport implements Transport {
     });
   }
 
-  Future get _supported {
+  Future<bool> get _supported {
     if (_supportedCompleter != null) {
       return _supportedCompleter.future;
     }
@@ -44,18 +44,6 @@ class WebsocketTransport implements Transport {
   int get readyState    => (_socket == null) ? Transport.CLOSED : _socket.readyState;
   String get url        => _url;
   String get humanType  => 'websocket';
-
-  StreamController<OpenEvent>    _onOpenController     = new StreamController<OpenEvent>();
-  Stream<OpenEvent>              get onOpen            => _onOpenController.stream;
-
-  StreamController<MessageEvent> _onMessageController  = new StreamController<MessageEvent>();
-  Stream<MessageEvent>           get onMessage         => _onMessageController.stream;
-
-  StreamController<ErrorEvent>   _onErrorController    = new StreamController<ErrorEvent>();
-  Stream<ErrorEvent>             get onError           => _onErrorController.stream;
-
-  StreamController<CloseEvent>   _onCloseController    = new StreamController<CloseEvent>();
-  Stream<CloseEvent>             get onClose           => _onCloseController.stream;
 
   WebsocketTransport(String this._url, [this._settings]);
 
