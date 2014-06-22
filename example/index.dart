@@ -17,7 +17,7 @@ void main() {
   cm.connect();
 
   cm.onOpen.listen((CM.OpenEvent e) {
-    print('I\'m opened');
+//    print('I\'m opened');
   });
 
   cm.onMessage.listen((CM.MessageEvent e) {
@@ -26,21 +26,17 @@ void main() {
   });
 
   cm.onClose.listen((e) {
-    print('closed');
+//    print('closed');
   });
 
-  cm.send({
-      'type': 'sync',
-      'data': ['pulp', 'fiction']
-  }).then((id) {
-    print('spravu s ideckom $id server prijal!');
+  new Timer(new Duration(milliseconds: 1500), () {
+    for (int i = 0; i < 10; i++) {
+      cm.send({
+          'type': 'sync',
+          'data': i
+      }).then((id) {
+        print('spravu s ideckom $id server prijal!');
+      });
+    }
   });
-
-  var i = 0;
-//  new Timer.periodic(new Duration(seconds: 1), (timer) {
-//    cm.send('test $i').then((id) {
-//      print('spravu s ideckom $id server prijal!');
-//    });
-//    i++;
-//  });
 }

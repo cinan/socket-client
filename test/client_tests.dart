@@ -15,7 +15,6 @@ import '../lib/connection_manager.dart';
 
 part 'async_helper.dart';
 
-part 'message_constructor_tests.dart';
 part 'transport_finder_tests.dart';
 part 'connection_manager_tests.dart';
 part 'polling_transport_tests.dart';
@@ -35,7 +34,6 @@ main() {
 
   useHtmlEnhancedConfiguration();
 
-  messageConstructorTests();
   transportFinderTests();
   connectionManagerTests();
   pollingTransportTests();
