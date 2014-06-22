@@ -9,28 +9,28 @@ import 'dart:convert';
 import 'package:logging/logging.dart';
 import 'package:json_object/json_object.dart';
 
-part 'interface/transport.dart';
+part 'interfaces/transport.dart';
 
-part 'wrapper/messager.dart';
-part 'wrapper/caller.dart';
+part 'wrappers/messager.dart';
+part 'wrappers/caller.dart';
 
-part 'stream_event/event.dart';
-part 'stream_event/open_event.dart';
-part 'stream_event/message_event.dart';
-part 'stream_event/error_event.dart';
-part 'stream_event/close_event.dart';
+part 'stream_events/event.dart';
+part 'stream_events/open_event.dart';
+part 'stream_events/message_event.dart';
+part 'stream_events/error_event.dart';
+part 'stream_events/close_event.dart';
 
 part 'heart.dart';
 part 'my_stream_consumer.dart';
 
-part 'mixin/event_controllers_and_streams.dart';
+part 'mixins/event_controllers_and_streams.dart';
 
 part 'transport_finder.dart';
-part 'transport/websocket_transport.dart';
-part 'transport/polling_transport.dart';
+part 'transports/websocket_transport.dart';
+part 'transports/polling_transport.dart';
 
-part 'transport/websocket_testing_transport.dart';
-part 'transport/polling_testing_transport.dart';
+part 'transports/websocket_testing_transport.dart';
+part 'transports/polling_testing_transport.dart';
 
 typedef Transport TransportBuilder();
 
