@@ -3,7 +3,7 @@ part of client_tests;
 websocketTransportTests() {
   group('websocket transport tests', () {
 
-    String url = 'ws://localhost:4040/ws';
+    String url = 'ws://dartserver.dev:4040/ws';
     WebsocketTestingTransport t;
 
     setUp(() {

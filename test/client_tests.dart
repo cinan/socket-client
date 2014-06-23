@@ -8,7 +8,7 @@ import 'package:unittest/unittest.dart';
 import 'package:unittest/html_enhanced_config.dart';
 import 'package:mock/mock.dart';
 import 'package:json_object/json_object.dart';
-
+import 'package:cookie/cookie.dart' as cookie;
 import 'package:logging/logging.dart';
 
 import '../lib/connection_manager.dart';

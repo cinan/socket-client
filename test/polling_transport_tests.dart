@@ -3,7 +3,7 @@ part of client_tests;
 pollingTransportTests() {
   group('polling transport tests', () {
 
-    String url = 'http://localhost:4040/polling';
+    String url = 'http://dartserver.dev:4040/polling';
     PollingTestingTransport t;
 
     setUp(() {

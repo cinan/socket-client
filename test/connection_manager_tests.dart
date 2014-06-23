@@ -3,8 +3,8 @@ part of client_tests;
 connectionManagerTests() {
   group('connection manager tests', () {
 
-    String wsUrl = 'ws://localhost:4040/ws';
-    String psUrl = 'http://localhost:4040/polling';
+    String wsUrl = 'ws://dartserver.dev:4040/ws';
+    String psUrl = 'http://dartserver.dev:4040/polling';
 
     ConnectionManager cm;
     WebsocketTestingTransport t;

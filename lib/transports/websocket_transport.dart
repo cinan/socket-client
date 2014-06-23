@@ -88,7 +88,7 @@ class WebsocketTransport extends Object with EventControllersAndStreams implemen
     return PongMessage.matches(jsonResp);
   }
 
-  OpenEvent _onOpenProcess(Event event) {
+  OpenEvent _onOpenProcess(Html.Event event) {
     _log.fine('Im opened');
 
     _startHeartbeat();

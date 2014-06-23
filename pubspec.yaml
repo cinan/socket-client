@@ -4,6 +4,7 @@ dependencies:
   browser: any
   logging: ">=0.9.1+1 <0.10.0"
   json_object: any
+  cookie: ">=0.0.4 <0.1.0"
   messages:
     path: ../messages/
 

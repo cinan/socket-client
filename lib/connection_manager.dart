@@ -8,13 +8,14 @@ import 'dart:convert';
 
 import 'package:logging/logging.dart';
 import 'package:json_object/json_object.dart';
-
+import 'package:cookie/cookie.dart' as cookie;
 import 'package:messages/messages.dart';
 
 part 'interfaces/transport.dart';
 
 part 'wrappers/messager.dart';
 part 'wrappers/caller.dart';
+part 'wrappers/cookie.dart';
 
 part 'stream_events/event.dart';
 part 'stream_events/open_event.dart';
@@ -24,6 +25,7 @@ part 'stream_events/close_event.dart';
 
 part 'heart.dart';
 part 'my_stream_consumer.dart';
+part 'session.dart';
 
 part 'mixins/event_controllers_and_streams.dart';
 

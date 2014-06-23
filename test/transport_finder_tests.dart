@@ -8,8 +8,8 @@ transportFinderTests() {
     WebsocketTransport ws;
     PollingTransport ps;
 
-    String wsUrl = 'ws://localhost:4040/ws';
-    String psUrl = 'http://localhost:4040/polling';
+    String wsUrl = 'ws://dartserver.dev:4040/ws';
+    String psUrl = 'http://dartserver.dev:4040/polling';
 
     setUp(() {
       tf = new TransportFinder();
