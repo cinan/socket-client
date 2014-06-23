@@ -14,8 +14,6 @@ class Messager extends Object with EventControllersAndStreams {
 
   Logger _log = new Logger('Messager');
 
-  Messager();
-
   void registerConnection(int priority, TransportBuilder connection) {
     _cookie.registerConnection(priority, connection);
   }
@@ -25,7 +23,7 @@ class Messager extends Object with EventControllersAndStreams {
     _setupListeners();
   }
 
-  Future<int> send(data) {
+  Future<int> send(dynamic data) {
     _nextSendId++;
 
     DataMessage message = new DataMessage(_nextSendId);

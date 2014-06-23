@@ -63,7 +63,7 @@ class ConnectionManager {
     _messager.connect();
   }
 
-  Future<int> send(data) {
+  Future<int> send(dynamic data) {
     return _messager.send(data);
   }
 
