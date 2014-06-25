@@ -29,7 +29,7 @@ class Cookie extends Object with EventControllersAndStreams {
     _setupListeners();
   }
 
-  void send(data) {
+  void send(String data) {
     _caller.send(data);
   }
 
