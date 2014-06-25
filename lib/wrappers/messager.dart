@@ -39,9 +39,13 @@ class Messager extends Object with EventControllersAndStreams {
       if (_messageContainer.isEmpty)
         return;
 
-      _messageContainer.length > 1
-        ? _cookie.send(_messageContainer.wrapped.toString())
-        : _cookie.send(_messageContainer.first.toString());
+      if (_messageContainer.length > 1) {
+        print('sending package');
+        _cookie.send(_messageContainer.wrapped.toString());
+      } else {
+        print('sending one');
+        _cookie.send(_messageContainer.first.toString());
+      }
 
       _messageContainer.clear();
     });
@@ -53,28 +57,13 @@ class Messager extends Object with EventControllersAndStreams {
     _cookie.disconnect();
   }
 
-  bool _isConfirmation(JsonObject decodedMessage) {
-    String messageType = decodedMessage['type'];
-
-    var messageId = null;
-    if (decodedMessage['body'] != null) {
-      messageId = decodedMessage['body']['id'];
+  void _finalizeMessage(messageID) {
+    if (_completers.containsKey(messageID)) {
+      _completers[messageID].complete(messageID);
+      _completers.remove(messageID);
     }
 
-    return ((messageType == 'confirmation') && (messageId != null));
-  }
-
-  void _finalizeMessage(JsonObject decodedConfirmation) {
-    var messageId = decodedConfirmation['id'];
-
-    if (_completers.containsKey(messageId)) {
-      _completers[messageId].complete(messageId);
-      _completers.remove(messageId);
-    }
-
-    if (_messageBuffer.containsKey(messageId)) {
-      _messageBuffer.remove(messageId);
-    }
+    _messageBuffer.remove(messageID);
   }
 
   void _setupListeners() {
@@ -99,8 +88,13 @@ class Messager extends Object with EventControllersAndStreams {
   CloseEvent _onCloseProcess(CloseEvent event) => event;
 
   void _sendMessageBuffer() {
+    MessageContainer container = new MessageContainer();
     for (Message msg in _messageBuffer.values) {
-      _cookie.send(msg.toString());
+      container.add(msg);
+    }
+
+    if (container.isNotEmpty) {
+      _cookie.send(container.wrapped.toString());
     }
   }
 
@@ -109,7 +103,7 @@ class Messager extends Object with EventControllersAndStreams {
       JsonObject decodedMessage = new JsonObject.fromJsonString(event.data);
 
       if (ConfirmationMessage.matches(decodedMessage)) {
-        _finalizeMessage(decodedMessage);
+        _finalizeMessage(decodedMessage['body']['confirmID']);
         return null;
       }
 
