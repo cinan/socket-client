@@ -16,7 +16,7 @@ class WebsocketTransport extends Object with EventControllersAndStreams implemen
     _log.info('Is Websocket supported?');
     return _supported.then((res) {
       _supportedCompleter = null;
-      disconnect();
+      disconnect(1000, 'try-end', true);
       return res;
     });
   }

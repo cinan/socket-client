@@ -18,7 +18,7 @@ class PollingTransport extends Object with EventControllersAndStreams implements
     _log.info('Is Polling supported?');
     return _supported.then((Future res) {
       _supportedCompleter = null;
-      disconnect();
+      disconnect(1000, 'try-end', true);
       return res;
     });
   }
