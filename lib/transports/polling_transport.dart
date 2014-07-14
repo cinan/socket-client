@@ -9,6 +9,9 @@ class PollingTransport extends Object with EventControllersAndStreams implements
 
   Heart _heart = new Heart(new Duration(seconds: 10));
 
+  String _sessionId = '';
+  final String _cookieName = 'sessionID';
+
   bool _isPending = false;
   Queue<String> _messageQueue = new Queue<String>();
 
@@ -58,7 +61,6 @@ class PollingTransport extends Object with EventControllersAndStreams implements
 
     _startHeartbeat();
 
-    // so Caller knows I'm up
     _onOpenController.add(new OpenEvent());
 
     _readyState = Transport.OPEN;
@@ -67,8 +69,12 @@ class PollingTransport extends Object with EventControllersAndStreams implements
   void disconnect([int code, String reason, bool forceDisconnect = false]) {
     _heart.die();
 
-    if (forceDisconnect && ((readyState == Transport.OPEN) || (readyState == Transport.CONNECTING))) {
-      _onCloseController.add(new CloseEvent(code, reason));
+    if (forceDisconnect) {
+      if ((readyState == Transport.OPEN) || (readyState == Transport.CONNECTING)) {
+        _onCloseController.add(new CloseEvent(code, reason));
+      }
+
+      _forgetSession();
     }
 
     _readyState = Transport.CLOSED;
@@ -79,6 +85,7 @@ class PollingTransport extends Object with EventControllersAndStreams implements
   }
 
   void _addToQueue(String data) {
+    // TODO: make like the server does, this is not good
     _log.info('Adding to queue');
     _messageQueue.addLast(data);
   }
@@ -92,14 +99,12 @@ class PollingTransport extends Object with EventControllersAndStreams implements
   }
 
   void _makeRequest(String data, [bool isPing = false]) {
-    if (!isPing) {
-      // Pings aren't queued
-      _isPending = true;
-      _log.info('Making no-ping request');
-    }
+    _isPending = true;
 
-    // TODO if there's pending operation and I switch transports, I drop listener onMessage
-    HttpRequest.postFormData(_url, _wrapData(data))
+    _setSessionCookie();
+
+    // TODO if there's pending operation and I switch transports, I drop listener onMessage. REALLY?
+    HttpRequest.postFormData(_url, _wrapData(data), withCredentials: true)
         .then(_handleRequestResponse)
         .catchError(_handleRequestError)
         .whenComplete(() => _handleRequestCompleted(isPing));
@@ -108,12 +113,12 @@ class PollingTransport extends Object with EventControllersAndStreams implements
   void _handleRequestResponse(HttpRequest resp) {
     MessageEvent e = new MessageEvent(resp.responseText, _url);
 
-    if (_isPong(resp)) {
-      _heart.addResponse();
-    } else {
-      _log.fine('Response returned');
-      _onMessageController.add(e);
-    }
+    _saveSessionId();
+
+    _heart.addResponse();
+
+    _log.fine('Response returned');
+    _onMessageController.add(e);
   }
 
   void _handleRequestError(ProgressEvent e) {
@@ -122,10 +127,8 @@ class PollingTransport extends Object with EventControllersAndStreams implements
   }
 
   void _handleRequestCompleted([bool pingRequest = false]) {
-    if (!pingRequest) {
-      // Pings aren't queued
-      _isPending = false;
-    }
+    _isPending = false;
+
     _sendNextFromQueue();
   }
 
@@ -147,5 +150,22 @@ class PollingTransport extends Object with EventControllersAndStreams implements
   bool _isPong(HttpRequest response) {
     JsonObject jsonResp = new JsonObject.fromJsonString(response.responseText);
     return PongMessage.matches(jsonResp);
+  }
+
+  void _setSessionCookie() {
+    cookie.set(_cookieName, _sessionId);
+  }
+
+  void _forgetSession() {
+    _log.info('removing session cookie');
+    cookie.remove(_cookieName);
+  }
+
+  void _saveSessionId() {
+    String sessionId = cookie.get(_cookieName);
+    if ((sessionId != null) && (sessionId.isNotEmpty)) {
+      _log.info('saving session cookie: $sessionId');
+      _sessionId = sessionId;
+    }
   }
 }

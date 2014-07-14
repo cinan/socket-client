@@ -45,6 +45,9 @@ class WebsocketTransport extends Object with EventControllersAndStreams implemen
   String get url        => _url;
   String get humanType  => 'websocket';
 
+  String _sessionId = '';
+  final String _cookieName = 'sessionID';
+
   WebsocketTransport(String this._url, [this._settings]);
 
   void connect() {
@@ -55,8 +58,12 @@ class WebsocketTransport extends Object with EventControllersAndStreams implemen
   void disconnect([int code, String reason, bool forceDisconnect = false]) {
     _heart.die();
 
-    if (forceDisconnect && ((readyState == Transport.OPEN) || (readyState == Transport.CONNECTING))) {
-      _socket.close(code, reason);
+    if (forceDisconnect) {
+      if ((readyState == Transport.OPEN) || (readyState == Transport.CONNECTING)) {
+        _socket.close(code, reason);
+      }
+
+      _forgetSession();
     }
   }
 
@@ -91,19 +98,19 @@ class WebsocketTransport extends Object with EventControllersAndStreams implemen
   OpenEvent _onOpenProcess(Html.Event event) {
     _log.fine('Im opened');
 
+    _saveSessionId();
+    _setSessionCookie();
+
     _startHeartbeat();
     return new OpenEvent.fromExistingHtmlEvent(event);
   }
 
   MessageEvent _onMessageProcess(Html.MessageEvent event) {
-    MessageEvent transformedEvent = new MessageEvent.fromExistingHtmlEvent(event);
-
-    if (_isPong(transformedEvent)) {
-      _heart.addResponse();
-      return null;
-    }
-
     _log.fine('Message received');
+
+    _heart.addResponse();
+
+    MessageEvent transformedEvent = new MessageEvent.fromExistingHtmlEvent(event);
     return transformedEvent;
   }
 
@@ -112,6 +119,23 @@ class WebsocketTransport extends Object with EventControllersAndStreams implemen
   CloseEvent _onCloseProcess(Html.CloseEvent event) {
     disconnect();
     return new CloseEvent.fromExistingHtmlEvent(event);
+  }
+
+  void _setSessionCookie() {
+    cookie.set(_cookieName, _sessionId);
+  }
+
+  void _forgetSession() {
+    _log.info('removing session cookie');
+    cookie.remove(_cookieName);
+  }
+
+  void _saveSessionId() {
+    String sessionId = cookie.get(_cookieName);
+    if ((sessionId != null) && (sessionId.isNotEmpty)) {
+      _log.info('saving session cookie: $sessionId');
+      _sessionId = sessionId;
+    }
   }
 
 }

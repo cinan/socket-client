@@ -3,7 +3,6 @@ import 'dart:html';
 import 'package:client/connection_manager.dart' hide MessageEvent, OpenEvent, CloseEvent, ErrorEvent;
 import 'package:client/connection_manager.dart' as CM show MessageEvent, OpenEvent, CloseEvent, ErrorEvent;
 import 'package:logging/logging.dart';
-import 'package:cookie/cookie.dart' as cookie;
 
 void main() {
   Logger.root.level = Level.ALL;
@@ -13,12 +12,12 @@ void main() {
 
   ConnectionManager cm = new ConnectionManager();
   cm.registerConnection(0, () => new WebsocketTransport('ws://dartserver.dev:4040/ws'));
-//  cm.registerConnection(0, () => new PollingTransport('http://localhost:4040/polling'));
+  cm.registerConnection(1, () => new PollingTransport('http://dartserver.dev:4040/polling'));
 
   cm.connect();
 
   cm.onOpen.listen((CM.OpenEvent e) {
-    print('Using cookie: ${cookie.get('sessionID')}');
+    print('Connection established!');
   });
 
   cm.onMessage.listen((CM.MessageEvent e) {
@@ -29,9 +28,9 @@ void main() {
   cm.onClose.listen((e) {
 //    print('closed');
   });
-
-  new Timer(new Duration(milliseconds: 1500), () {
-    for (int i = 0; i < 10; i++) {
+  int i = 0;
+//  new Timer.periodic(new Duration(seconds: 2), (_) {
+    for (i = 0; i < 2; i++) {
       cm.send({
           'type': 'sync',
           'data': i
@@ -39,5 +38,6 @@ void main() {
         print('spravu s ideckom $id server prijal!');
       });
     }
-  });
+
+//  });
 }

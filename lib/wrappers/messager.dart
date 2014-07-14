@@ -2,24 +2,24 @@ part of connection_manager;
 
 class Messager extends Object with EventControllersAndStreams {
 
-  bool get connected        => _cookie.connected;
-  String get transportName  => _cookie.transportName;
+  bool get connected        => _caller.connected;
+  String get transportName  => _caller.transportName;
 
   LinkedHashMap<int, Message> _messageBuffer    = new LinkedHashMap<int, Message>();
-  MessageContainer            _messageContainer = new MessageContainer();
   Map<int, Completer>         _completers       = new Map<dynamic, Completer>();
+  MessageContainer            _messageContainer = new MessageContainer();
 
-  Cookie _cookie = new Cookie();
+  Caller _caller = new Caller();
   int _nextSendId = 0;
 
   Logger _log = new Logger('Messager');
 
   void registerConnection(int priority, TransportBuilder connection) {
-    _cookie.registerConnection(priority, connection);
+    _caller.registerConnection(priority, connection);
   }
 
   void connect() {
-    _cookie.connect();
+    _caller.connect();
     _setupListeners();
   }
 
@@ -41,10 +41,10 @@ class Messager extends Object with EventControllersAndStreams {
 
       if (_messageContainer.length > 1) {
         print('sending package');
-        _cookie.send(_messageContainer.wrapped.toString());
+        _caller.send(_messageContainer.wrapped.toString());
       } else {
         print('sending one');
-        _cookie.send(_messageContainer.first.toString());
+        _caller.send(_messageContainer.first.toString());
       }
 
       _messageContainer.clear();
@@ -54,10 +54,10 @@ class Messager extends Object with EventControllersAndStreams {
   }
 
   void disconnect() {
-    _cookie.disconnect();
+    _caller.disconnect();
   }
 
-  void _finalizeMessage(messageID) {
+  void _finalizeMessage(int messageID) {
     if (_completers.containsKey(messageID)) {
       _completers[messageID].complete(messageID);
       _completers.remove(messageID);
@@ -67,10 +67,10 @@ class Messager extends Object with EventControllersAndStreams {
   }
 
   void _setupListeners() {
-    _cookie.onOpen.pipe(new MyStreamConsumer(_onOpenController, _onOpenProcess));
-    _cookie.onMessage.pipe(new MyStreamConsumer(_onMessageController, _onMessageProcess));
-    _cookie.onError.pipe(new MyStreamConsumer(_onErrorController, _onErrorProcess));
-    _cookie.onClose.pipe(new MyStreamConsumer(_onCloseController, _onCloseProcess));
+    _caller.onOpen.pipe(new MyStreamConsumer(_onOpenController, _onOpenProcess));
+    _caller.onMessage.pipe(new MyStreamConsumer(_onMessageController, _onMessageProcess));
+    _caller.onError.pipe(new MyStreamConsumer(_onErrorController, _onErrorProcess));
+    _caller.onClose.pipe(new MyStreamConsumer(_onCloseController, _onCloseProcess));
   }
 
   OpenEvent _onOpenProcess(OpenEvent event) {
@@ -80,8 +80,14 @@ class Messager extends Object with EventControllersAndStreams {
     return event;
   }
 
-  MessageEvent _onMessageProcess(MessageEvent event) {
-    return _decodeMessageEvent(event);
+  void _onMessageProcess(MessageEvent event) {
+    JsonObject decodedMessage;
+    try {
+      decodedMessage = new JsonObject.fromJsonString(event.data);
+      _decodeMessageEvent(decodedMessage, event);
+    } on FormatException {
+      _log.warning('Malformatted message received');
+    }
   }
 
   ErrorEvent _onErrorProcess(ErrorEvent event) => event;
@@ -94,29 +100,34 @@ class Messager extends Object with EventControllersAndStreams {
     }
 
     if (container.isNotEmpty) {
-      _cookie.send(container.wrapped.toString());
+      _caller.send(container.wrapped.toString());
     }
   }
 
-  MessageEvent _decodeMessageEvent(MessageEvent event) {
-    try {
-      JsonObject decodedMessage = new JsonObject.fromJsonString(event.data);
-
-      if (ConfirmationMessage.matches(decodedMessage)) {
-        _finalizeMessage(decodedMessage['body']['confirmID']);
-        return null;
-      }
-
-      // ak ide o potvrdenie spravy, tak to je sprava iba pre mna a moje Futures
-      if (decodedMessage.containsKey('body')) {
-        return new MessageEvent.fromExisting(event, preserveTimestamp: true);
-      } else {
-        throw new FormatException();
-      }
-    } on FormatException {
-      _log.warning('Malformatted message received');
+  void _decodeMessageEvent(JsonObject decodedMessage, MessageEvent event) {
+    if (ConfirmationMessage.matches(decodedMessage)) {
+      _finalizeMessage(decodedMessage['body']['confirmID']);
       return null;
     }
+
+    if (DataMessage.matches(decodedMessage)) {
+      MessageEvent e = new MessageEvent(decodedMessage['body'], event.origin);
+      _onMessageController.add(e);
+
+      _sendConfirmation(decodedMessage['id']);
+    } else if (MessageContainer.matches(decodedMessage)) {
+      decodedMessage['messages'].forEach((Message m) {
+        _decodeMessageEvent(m, event);
+      });
+    }
+  }
+
+  void _sendConfirmation(int messageID) {
+    _log.info('sending confirmation to $messageID');
+
+    ConfirmationMessage confirmation = new ConfirmationMessage(_nextSendId++);
+    confirmation.confirmID = messageID;
+    _caller.send(confirmation.toString());
   }
 }
 
