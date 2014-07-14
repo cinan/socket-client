@@ -26,7 +26,7 @@ class Messager extends Object with EventControllersAndStreams {
   Future<int> send(dynamic data) {
     _nextSendId++;
 
-    DataMessage message = new DataMessage(_nextSendId);
+    DataMessage message = new DataMessage(id:_nextSendId);
     message.body = data;
 
     _log.info('adding to the message queue: $message');
